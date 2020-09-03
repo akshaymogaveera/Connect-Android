@@ -4,19 +4,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.connect.NewsFeed.NewsFeedActivity">
+    android:background="#ECE8E8"
+    tools:context="com.connect.NewsFeed.NewsFeedFragment">
 
     <!--ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/listView"></ListView-->
-
-    <androidx.recyclerview.widget.RecyclerView
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swiperefresh_newsfeed"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/listView">
+        android:layout_height="match_parent">
 
-    </androidx.recyclerview.widget.RecyclerView>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/listView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
+        </androidx.recyclerview.widget.RecyclerView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

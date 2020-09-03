@@ -12,7 +12,9 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.connect.Comments.CommentsApi;
 import com.connect.NewsFeed.model.Feed;
 import com.connect.main.R;
 
@@ -32,9 +34,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -48,10 +47,12 @@ public class NewsFeedFragment extends Fragment {
     private static final String TAG = "NewsFeedActivity";
     private static final String BASE_URL = "http://192.168.42.206:8000/firstapp/";
     public static SharedPreferences sharedpreferences;
-    String countLikes, countComments, id;
+    String countLikes, countComments, id, profileImgUrl;
     ArrayList<Card> list;
     HashMap<String, Card> mapping;
     boolean liked;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
 
     @Nullable
     @Override
@@ -62,20 +63,41 @@ public class NewsFeedFragment extends Fragment {
         sharedpreferencesobs = this.getActivity().getSharedPreferences("myKey", MODE_PRIVATE);
         //mListView = (ListView) findViewById(R.id.listView);
         mListView = (RecyclerView) view.findViewById(R.id.listView);
+        mSwipeRefreshLayout = view.findViewById(R.id.swiperefresh_newsfeed);
         countLikes = "0";
         countComments = "0";
         id ="NA";
         liked = false;
         list = new ArrayList<>();
         mapping = new HashMap<>();
-        list.add(new Card(id, "http://192.168.42.206:8000/media/post_pics/IMG-20181118-WA0138.jpg","Assam", countLikes, countComments, liked));
-        list.add(new Card(id, "drawable://" + R.drawable.arizona_dessert, "Arizona Dessert", countLikes, countComments, liked));
-        list.add(new Card(id, "drawable://" + R.drawable.colorado_mountains, "Colorado Mountains", countLikes, countComments, liked));
-        list.add(new Card(id, "drawable://" + R.drawable.hawaii_rainforest, "DavenPort California", countLikes, countComments, liked));
-
-        //getNewsFeed(list);
+//        list.add(new Card(id, "http://192.168.42.206:8000/media/post_pics/IMG-20181118-WA0138.jpg","Assam", countLikes, countComments, liked));
+//        list.add(new Card(id, "drawable://" + R.drawable.arizona_dessert, "Arizona Dessert", countLikes, countComments, liked));
 
 
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to make your refresh action
+                // CallYourRefreshingMethod();
+                list.clear();
+                mapping.clear();
+                executeObservables();
+                mSwipeRefreshLayout.setRefreshing(false);
+                //adapter.notifyDataSetChanged();
+            }
+
+
+
+        });
+
+        executeObservables();
+
+
+
+        return view;
+    }
+
+    private void executeObservables(){
 
         getPostsObservable()
                 .subscribeOn(Schedulers.io())
@@ -98,6 +120,13 @@ public class NewsFeedFragment extends Fragment {
                     @Override
                     public ObservableSource<Feed> apply(Feed post) throws Exception {
                         return getLikedObservable(post);
+
+                    }
+                })
+                .flatMap(new Function<Feed, ObservableSource<Feed>>() {
+                    @Override
+                    public ObservableSource<Feed> apply(Feed post) throws Exception {
+                        return getProfilePicObservable(post);
 
                     }
                 })
@@ -124,8 +153,6 @@ public class NewsFeedFragment extends Fragment {
                     }
                 });
 
-
-        return view;
     }
 
     private Observable<Feed> getPostsObservable(){
@@ -141,11 +168,11 @@ public class NewsFeedFragment extends Fragment {
                     @Override
                     public ObservableSource<Feed> apply(final List<Feed> posts) throws Exception {
 
-                        for (Feed f: posts) {
-                            System.out.println(f.getAuthor().getUsername());
+                        for (Feed post: posts) {
+                            System.out.println(post.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(f.getId(), "http://192.168.42.206:8000"+f.getPost_pics(),f.getAuthor().getUsername(), countLikes, countComments, liked);
-                            mapping.put(f.getId(),temp);
+                            Card temp = new Card(post.getAuthor().getId(), post.getId(), "http://192.168.42.206:8000"+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
+                            mapping.put(post.getId(),temp);
                             list.add(temp);
                         }
 
@@ -284,67 +311,43 @@ public class NewsFeedFragment extends Fragment {
 
     }
 
-    public boolean changeLikesCount(String id, HashMap<String, Card> mapping, ArrayList<Card> list){
+    public Observable<Feed> getProfilePicObservable(final Feed post){
 
-        NewsFeedApi likePost = NewsFeedApi.getRequestApi();
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+ NewsFeedFragment.sharedpreferences.getString("accessToken", null));
-        headerMap.put("Content-Type", "application/json");
-
+        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
         HashMap<String, String> body = new HashMap<String, String>();
-        body.put("id",id);
 
-        Call<ResponseBody> call = likePost.countLikes(body, headerMap);
+        return CommentsApi.getRequestApi()
+                .getProfilePic(new HashMap<String, String>()
+                {{
+                    put("id",post.getAuthor().getId());
 
-        call.enqueue(new Callback<ResponseBody>() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                Log.d(TAG, "onResponse: Server Response: " + response.toString());
+                }},headerMap)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<ResponseBody, Feed>() {
+                    @RequiresApi(api = Build.VERSION_CODES.N)
+                    @Override
+                    public Feed apply(ResponseBody profilePic) throws Exception {
 
-                String responseCode = String.valueOf(response.code());
-                Log.d(TAG, "onResponse: json: " + responseCode);
-                //JSONObject data = null;
-                // data = new JSONObject(json);
-//                         //   Log.d(TAG, "onResponse: data: " + data.optString("json"));
-                if (responseCode.contentEquals("200")) {
-
-                    try {
-
-                        Log.d(TAG, "Likes re-counted after button press " + responseCode);
-
-                        JSONObject data = new JSONObject(response.body().string());
-                        String count = data.getString("count");
-                        System.out.println(count+" Comment -------------"+id);
+                        JSONObject data = new JSONObject(profilePic.string());
+                        String profile_pic = data.getString("profile_pic");
+                        System.out.println("Profile Pic: "+profile_pic);
                         //post.setComments(comments);
 
-                        Card temp = mapping.get(id);
+                        Card temp = mapping.get(post.getId());
                         int pos = list.indexOf(temp);
-                        temp.setCountLikes(count);
-                        mapping.replace(id,temp);
+                        temp.setProfileImgUrl("http://192.168.42.206:8000"+profile_pic);
+                        mapping.replace(post.getId(),temp);
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
                         adapter.notifyItemChanged(pos);
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        return post;
                     }
+                });
 
-
-                } else {
-                    Log.d(TAG, "Post not Liked " + responseCode);
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e(TAG, "onFailure: Something went wrong: " + t.getMessage());
-
-            }
-        });
-
-        return true;
     }
+
 }

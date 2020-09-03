@@ -1,17 +1,14 @@
-package com.connect.UserProfile;
+package com.connect.UserProfileEdit;
 
-import com.connect.UserProfile.models.Info;
-import com.connect.UserProfile.models.UserProfile;
+import com.connect.UserProfileEdit.models.Info;
+import com.connect.UserProfileEdit.models.UserProfile;
 
-import java.util.List;
 import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.Headers;

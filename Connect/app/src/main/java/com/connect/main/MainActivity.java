@@ -17,11 +17,18 @@ import com.connect.Home.HomeActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.Cache;
+import okhttp3.CacheControl;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -65,8 +72,23 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
 
+            HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor();
+            httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+            File httpCacheDirectory = new File(getCacheDir(), "offlineCache");
+
+            //10 MB
+            Cache cache = new Cache(httpCacheDirectory, 10 * 1024 * 1024);
+
+            OkHttpClient httpClient = new OkHttpClient.Builder()
+                    .cache(cache)
+                    .addInterceptor(httpLoggingInterceptor)
+                    .addNetworkInterceptor(provideCacheInterceptor())
+                    .addInterceptor(provideOfflineCacheInterceptor())
+                    .build();
 
             Retrofit retrofit = new Retrofit.Builder()
+                    //.client(httpClient)
                     .baseUrl("http://192.168.42.206:8000/firstapp/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
@@ -135,5 +157,65 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+    }
+
+    public static Interceptor provideCacheInterceptor() {
+
+        return new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                okhttp3.Request request = chain.request();
+                okhttp3.Response originalResponse = chain.proceed(request);
+                String cacheControl = originalResponse.header("Cache-Control");
+
+                if (cacheControl == null || cacheControl.contains("no-store") || cacheControl.contains("no-cache") ||
+                        cacheControl.contains("must-revalidate") || cacheControl.contains("max-stale=0")) {
+
+
+                    CacheControl cc = new CacheControl.Builder()
+                            .maxStale(1, TimeUnit.DAYS)
+                            .build();
+
+
+
+                    request = request.newBuilder()
+                            .cacheControl(cc)
+                            .removeHeader("Vary")
+                            .build();
+
+                    return chain.proceed(request);
+
+                } else {
+                    return originalResponse;
+                }
+            }
+        };
+
+    }
+
+
+    public static Interceptor provideOfflineCacheInterceptor() {
+
+        return new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                try {
+                    return chain.proceed(chain.request());
+                } catch (Exception e) {
+
+
+                    CacheControl cacheControl = new CacheControl.Builder()
+                            .onlyIfCached()
+                            .maxStale(1, TimeUnit.DAYS)
+                            .build();
+
+                    Request offlineRequest = chain.request().newBuilder()
+                            .removeHeader("Vary")
+                            .cacheControl(cacheControl)
+                            .build();
+                    return chain.proceed(offlineRequest);
+                }
+            }
+        };
     }
 }

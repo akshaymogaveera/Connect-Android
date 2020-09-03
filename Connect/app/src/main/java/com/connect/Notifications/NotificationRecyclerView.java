@@ -1,5 +1,6 @@
 package com.connect.Notifications;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -31,10 +32,10 @@ import java.util.HashMap;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecyclerView.SearchViewHolder> {
+class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecyclerView.NotificationViewHolder> {
 
 
-    private static final String TAG = "SearchRecyclerView";
+    private static final String TAG = "NotificationRecyclerView";
 
     private Context mContext;
     private int mResource;
@@ -53,17 +54,18 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
 
     @NonNull
     @Override
-    public SearchViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(mResource, parent, false);
-        return new SearchViewHolder(view);
+        return new NotificationViewHolder(view);
     }
 
 
 
 
+    @SuppressLint("LongLogTag")
     @Override
-    public void onBindViewHolder(@NonNull SearchViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
 
         SearchLinear card = list.get(position);
 
@@ -136,13 +138,13 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
         return list.size();
     }
 
-    class SearchViewHolder extends RecyclerView.ViewHolder{
+    class NotificationViewHolder extends RecyclerView.ViewHolder{
 
         TextView firstname, lastname;
         CircleImageView profile_photo_search;
         ProgressBar dialog;
 
-        public SearchViewHolder(@NonNull View itemView) {
+        public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
 
             firstname =  itemView.findViewById(R.id.firstname);

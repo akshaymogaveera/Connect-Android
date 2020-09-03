@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-class ProfileFeedRecyclerView extends RecyclerView.Adapter<ProfileFeedRecyclerView.NewsFeedViewHolder> {
+class ProfileFeedRecyclerView extends RecyclerView.Adapter<ProfileFeedRecyclerView.ProfileFeedViewHolder> {
 
 
     private static final String TAG = "NewFeedRecyclerView";
@@ -54,14 +54,14 @@ class ProfileFeedRecyclerView extends RecyclerView.Adapter<ProfileFeedRecyclerVi
 
     @NonNull
     @Override
-    public NewsFeedViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ProfileFeedViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(mResource, parent, false);
-        return new NewsFeedViewHolder(view);
+        return new ProfileFeedViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NewsFeedViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ProfileFeedViewHolder holder, int position) {
 
         Card card = list.get(position);
 
@@ -184,13 +184,13 @@ class ProfileFeedRecyclerView extends RecyclerView.Adapter<ProfileFeedRecyclerVi
         return list.size();
     }
 
-    class NewsFeedViewHolder extends RecyclerView.ViewHolder{
+    class ProfileFeedViewHolder extends RecyclerView.ViewHolder{
 
         TextView title, likesCount, commentCount, viewAllComments, caption;
         ImageView image, likeImage;
         ProgressBar dialog;
 
-        public NewsFeedViewHolder(@NonNull View itemView) {
+        public ProfileFeedViewHolder(@NonNull View itemView) {
             super(itemView);
 
             title = (TextView) itemView.findViewById(R.id.cardTitle);

@@ -1,6 +1,7 @@
 package com.connect.Search;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,11 +9,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.connect.Comments.models.CommentLinear;
+import com.connect.Profile.UserProfileActivity;
+import com.connect.Search.model.Search;
+import com.connect.Search.model.SearchLinear;
 import com.connect.main.R;
 import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -29,18 +34,18 @@ import java.util.HashMap;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.CommentsListViewHolder> {
+class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.SearchViewHolder> {
 
 
-    private static final String TAG = "CommentsRecyclerView";
+    private static final String TAG = "SearchRecyclerView";
 
     private Context mContext;
     private int mResource;
-    private ArrayList<CommentLinear> list;
-    private HashMap<String, CommentLinear> mapping;
+    private ArrayList<SearchLinear> list;
+    private HashMap<String, SearchLinear> mapping;
     private int lastPosition = -1;
 
-    public SearchRecyclerView(Context mContext, int resource, ArrayList<CommentLinear> list, HashMap<String, CommentLinear> mapping) {
+    public SearchRecyclerView(Context mContext, int resource, ArrayList<SearchLinear> list, HashMap<String, SearchLinear> mapping) {
         this.mContext = mContext;
         this.mResource = resource;
         this.list = list;
@@ -51,23 +56,26 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.Comment
 
     @NonNull
     @Override
-    public CommentsListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public SearchViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(mResource, parent, false);
-        return new CommentsListViewHolder(view);
+        return new SearchViewHolder(view);
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull CommentsListViewHolder holder, int position) {
 
-        CommentLinear card = list.get(position);
+
+
+    @Override
+    public void onBindViewHolder(@NonNull SearchViewHolder holder, int position) {
+
+        SearchLinear card = list.get(position);
 
         try{
 
             lastPosition = position;
 
-            holder.commentedby.setText(card.getAuthor());
-            holder.commentContent.setText(card.getText());
+            holder.firstname.setText(card.getFirst_name());
+            holder.lastname.setText(card.getLast_name());
 
             //create the imageloader object
 
@@ -77,7 +85,18 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.Comment
 
             //com.connect.NewsFeed.NewsFeedFragment newsFeedFragment = new com.connect.NewsFeed.NewsFeedFragment();
 
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "onClick: profile clicked");
+                    Intent intent = new Intent(mContext, UserProfileActivity.class);
+                    intent.putExtra("id",card.getAuthor_id());
+                    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
+                    //startActivity(intent);
+                    mContext.startActivity(intent);
 
+                }
+            });
 
             //create display options
             DisplayImageOptions options = new DisplayImageOptions.Builder().cacheInMemory(true)
@@ -87,7 +106,7 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.Comment
                     .showImageOnLoading(defaultImage).build();
 
             //download and display image from url
-            imageLoader.displayImage(card.getProfile_pic(), holder.mProfilePhoto, options,new ImageLoadingListener() {
+            imageLoader.displayImage(card.getProfile_pic(), holder.profile_photo_search, options,new ImageLoadingListener() {
                 @Override
                 public void onLoadingStarted(String imageUri, View view) {
                     //holder.dialog.setVisibility(View.VISIBLE);
@@ -120,18 +139,18 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.Comment
         return list.size();
     }
 
-    class CommentsListViewHolder extends RecyclerView.ViewHolder{
+    class SearchViewHolder extends RecyclerView.ViewHolder{
 
-        TextView commentedby, commentContent;
-        CircleImageView mProfilePhoto;
+        TextView firstname, lastname;
+        CircleImageView profile_photo_search;
         ProgressBar dialog;
 
-        public CommentsListViewHolder(@NonNull View itemView) {
+        public SearchViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            commentedby = (TextView) itemView.findViewById(R.id.commentedby);
-            commentContent =  (TextView) itemView.findViewById(R.id.commentContent);
-            mProfilePhoto = (CircleImageView) itemView.findViewById(R.id.profile_photo_comments);
+            firstname =  itemView.findViewById(R.id.firstname);
+            lastname =  itemView.findViewById(R.id.lastname);
+            profile_photo_search = (CircleImageView) itemView.findViewById(R.id.profile_photo_search);
             dialog = (ProgressBar) itemView.findViewById(R.id.cardProgressDialog);
 
         }
@@ -159,49 +178,4 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.Comment
 
 
 
-
-
-//    private static final String TAG = "NewFeedRecyclerView";
-//
-//    private Context mContext;
-//    private int mResource;
-//    private int lastPosition = -1;
-//
-//    public NewFeedRecyclerView(Context mContext) {
-//        this.mContext = mContext;
-//    }
-//
-//    @NonNull
-//    @Override
-//    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        return null;
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(@NonNull  RecyclerView.ViewHolder holder, int position) {
-//
-//    }
-//
-//    @Override
-//    public int getItemCount() {
-//        return 0;
-//    }
-//
-//    public class ViewHolder extends RecyclerView.ViewHolder{
-//
-//        TextView title, likesCount, commentCount;
-//        ImageView image;
-//        ProgressBar dialog;
-//
-//        public ViewHolder(View itemView) {
-//            super(itemView);
-//            title = (TextView) itemView.findViewById(R.id.cardTitle);
-//            image = (ImageView) itemView.findViewById(R.id.cardImage);
-//            dialog = (ProgressBar) itemView.findViewById(R.id.cardProgressDialog);
-//            likesCount = (TextView)  itemView.findViewById(R.id.cardLikes);
-//            commentCount = (TextView)  itemView.findViewById(R.id.cardComments);
-//
-//
-//        }
-//    }
 }

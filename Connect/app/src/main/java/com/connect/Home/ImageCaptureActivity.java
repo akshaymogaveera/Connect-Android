@@ -5,6 +5,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.connect.Utils.Permissions;
 import com.connect.main.MainActivity;
@@ -33,6 +35,10 @@ import com.connect.main.UniversalImageLoader;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
+import java.io.ByteArrayOutputStream;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
+import java.io.File;
 import java.util.zip.Inflater;
 
 import static android.webkit.ConsoleMessage.MessageLevel.LOG;
@@ -45,6 +51,7 @@ import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 public class ImageCaptureActivity extends AppCompatActivity {
 
     private ImageView imageView;
+    final int PIC_CROP = 2;
     private static final String TAG = "ImageCaptureActivity";
     private static final int VERIFY_PERMISSIONS_REQUEST = 1;
     private Context mContext = ImageCaptureActivity.this;
@@ -124,6 +131,21 @@ public class ImageCaptureActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            if (resultCode == RESULT_OK) {
+                Uri resultUri = result.getUri();
+                Intent intent = new Intent();
+                intent.putExtra("imgUrl", resultUri.toString());
+                setResult(RESULT_OK, intent);
+                finish();
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+            }
+        }
+
         if (resultCode != RESULT_CANCELED) {
             switch (requestCode) {
                 case 0:
@@ -152,10 +174,14 @@ public class ImageCaptureActivity extends AppCompatActivity {
 
                                 cursor.close();
 
-                                Intent intent = new Intent();
-                                intent.putExtra("imgUrl", "file://"+picturePath);
-                                setResult(RESULT_OK, intent);
-                                finish();
+                                //send image to previous activity
+//                                Intent intent = new Intent();
+//                                intent.putExtra("imgUrl", "file://"+picturePath);
+//                                setResult(RESULT_OK, intent);
+
+                                launchImageCrop(Uri.parse("file://"+picturePath));
+
+                                //finish();
 
                                 //imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
 
@@ -167,6 +193,7 @@ public class ImageCaptureActivity extends AppCompatActivity {
 
                     }
                     break;
+
             }
         }
     }
@@ -238,4 +265,14 @@ public class ImageCaptureActivity extends AppCompatActivity {
             return true;
         }
     }
+
+    private void launchImageCrop(Uri uri){
+        CropImage.activity(uri)
+                .setAspectRatio(1,1)
+                .setGuidelines(CropImageView.Guidelines.ON)
+                //.setAspectRatio(1920, 1080)
+                //.setCropShape(CropImageView.CropShape.RECTANGLE) // default is rectangle
+                .start(this);
+    }
 }
+

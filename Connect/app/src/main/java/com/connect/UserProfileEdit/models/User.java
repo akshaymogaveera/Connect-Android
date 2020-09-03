@@ -1,4 +1,4 @@
-package com.connect.UserProfile.models;
+package com.connect.UserProfileEdit.models;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

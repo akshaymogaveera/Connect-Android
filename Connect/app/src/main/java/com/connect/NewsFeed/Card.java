@@ -1,20 +1,50 @@
 package com.connect.NewsFeed;
 
 public class Card {
+    private String authorid;
     private String id;
     private String imgURL;
     private String title;
     private String countLikes;
     private String countComments;
     private boolean liked;
+    private String caption;
+    private String profileImgUrl;
 
-    public Card(String id, String imgURL, String title, String countLikes, String countComments, boolean liked) {
+    public Card(String authorid, String id, String imgURL, String title, String countLikes, String countComments, boolean liked, String caption, String profileImgUrl) {
+        this.authorid = authorid;
         this.id = id;
         this.imgURL = imgURL;
         this.title = title;
         this.countLikes = countLikes;
         this.countComments = countComments;
         this.liked = liked;
+        this.caption = caption;
+        this.profileImgUrl = profileImgUrl;
+    }
+
+    public String getAuthorid() {
+        return authorid;
+    }
+
+    public void setAuthorid(String authorid) {
+        this.authorid = authorid;
+    }
+
+    public String getProfileImgUrl() {
+        return profileImgUrl;
+    }
+
+    public void setProfileImgUrl(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public void setCaption(String caption) {
+        this.caption = caption;
     }
 
     public String getId() {

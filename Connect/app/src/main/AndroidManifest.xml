@@ -14,13 +14,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.connect.Comments.ViewAllCommentsActivity"></activity>
+        <activity android:name="com.connect.Search.SearchActivity"></activity>
+        <activity android:name="com.connect.Profile.UserProfileActivity" />
+        <activity android:name="com.connect.Profile.ProfileActivity" />
+        <activity android:name="com.connect.Post.CreatePostActivity" />
+        <activity android:name="com.connect.Comments.ViewAllCommentsActivity" />
         <activity android:name="com.connect.NewsFeed.NewsFeedActivity" />
         <activity android:name="com.connect.Home.ImageCaptureActivity" />
         <activity android:name="com.connect.Auth.LogoutActivity" />
-        <activity android:name="com.connect.UserProfile.EditProfileFragment" />
+        <activity android:name="com.connect.UserProfileEdit.EditProfileFragment" />
         <activity android:name="com.connect.Home.HomeActivity" />
         <activity android:name="com.connect.Auth.LoginActivity" />
+        <activity
+            android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
+            android:theme="@style/Base.Theme.AppCompat" /> <!-- optional (needed if default theme has no action bar) -->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

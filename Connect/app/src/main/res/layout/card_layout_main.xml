@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginRight="2dp"
+    android:layout_marginBottom="10dp"
     android:paddingLeft="16dp"
     android:paddingTop="16dp"
     android:paddingRight="16dp"
@@ -13,7 +14,7 @@
 
 
     <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
+        android:layout_width="400dp"
         android:layout_height="wrap_content"
         app:cardCornerRadius="5dp"
         app:cardElevation="10dp"
@@ -23,21 +24,26 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:visibility="gone">
+            android:layout_height="match_parent">
 
-            <LinearLayout
+            <!--LinearLayout
                 android:id="@+id/linearabove"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:orientation="horizontal"
-                android:weightSum="3">
+                android:weightSum="3"-->
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/linearabove"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:paddingLeft="15dp"
+                android:paddingTop="5dp"
+                app:menu="@menu/card_menu">
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/profile_photo_newsfeed"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:layout_centerHorizontal="true"
                     android:paddingTop="3dp"
                     android:src="@drawable/ic_android"
                     app:civ_border_color="@color/black"
@@ -47,30 +53,45 @@
                     android:id="@+id/cardTitle"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="15dp"
                     android:gravity="center_vertical"
+                    android:paddingRight="10dp"
                     android:paddingBottom="10dp"
                     android:text="Card Title"
                     android:textStyle="bold" />
 
+            </androidx.appcompat.widget.Toolbar>
 
-            </LinearLayout>
+
+            <!--/LinearLayout-->
 
 
             <ImageView
                 android:id="@+id/cardImage"
                 android:layout_width="match_parent"
-                android:layout_height="170dp"
+                android:layout_height="300dp"
                 android:layout_below="@+id/linearabove"
                 android:layout_marginLeft="5dp"
+                android:layout_marginTop="10dp"
                 android:scaleType="centerCrop" />
+
+            <TextView
+                android:id="@+id/caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cardImage"
+                android:paddingLeft="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:text="hello">
+
+            </TextView>
 
             <LinearLayout
                 android:id="@+id/likescomments"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_below="@+id/cardImage"
+                android:layout_below="@+id/caption"
                 android:orientation="horizontal"
                 android:weightSum="4">
 

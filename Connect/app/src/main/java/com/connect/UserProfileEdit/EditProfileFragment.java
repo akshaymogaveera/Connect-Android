@@ -1,4 +1,4 @@
-package com.connect.UserProfile;
+package com.connect.UserProfileEdit;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,21 +16,16 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.FileUtils;
-import android.os.Parcelable;
 import android.provider.MediaStore;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.connect.Auth.BasicAuthInterceptor;
 import com.connect.Home.ImageCaptureActivity;
-import com.connect.UserProfile.models.Info;
-import com.connect.UserProfile.models.UserProfile;
+import com.connect.UserProfileEdit.models.Info;
+import com.connect.UserProfileEdit.models.UserProfile;
 import com.connect.main.R;
 import com.connect.main.UniversalImageLoader;
 
@@ -38,23 +33,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
