@@ -14,13 +14,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.connect.main.R;
-import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.ArrayList;
@@ -56,13 +52,14 @@ class CustomListAdapter extends ArrayAdapter<Card> {
      * @param resource
      * @param objects
      */
-    public CustomListAdapter(Context context, int resource, ArrayList<Card> objects) {
+    private CustomListAdapter(Context context, int resource, ArrayList<Card> objects) {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
 
-        //sets up the image loader library
-        setupImageLoader();
+
+        com.connect.Utils.ImageLoader imageLoader = new com.connect.Utils.ImageLoader();
+        imageLoader.setupImageLoader(mContext);
     }
 
     @NonNull
@@ -155,23 +152,6 @@ class CustomListAdapter extends ArrayAdapter<Card> {
 
     }
 
-    /**
-     * Required for setting up the Universal Image loader Library
-     */
-    private void setupImageLoader(){
-        // UNIVERSAL IMAGE LOADER SETUP
-        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
-                .cacheOnDisc(true).cacheInMemory(true)
-                .imageScaleType(ImageScaleType.EXACTLY)
-                .displayer(new FadeInBitmapDisplayer(300)).build();
 
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
-                mContext)
-                .defaultDisplayImageOptions(defaultOptions)
-                .memoryCache(new WeakMemoryCache())
-                .discCacheSize(100 * 1024 * 1024).build();
 
-        ImageLoader.getInstance().init(config);
-        // END - UNIVERSAL IMAGE LOADER SETUP
-    }
 }

@@ -1,4 +1,4 @@
-package com.connect.Comments.models;
+package com.connect.Comments.model;
 
 import com.connect.NewsFeed.model.Author;
 import com.google.gson.annotations.Expose;

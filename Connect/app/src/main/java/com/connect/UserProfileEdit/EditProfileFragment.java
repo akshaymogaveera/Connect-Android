@@ -1,31 +1,22 @@
 package com.connect.UserProfileEdit;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.media.ExifInterface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.connect.Home.ImageCaptureActivity;
 import com.connect.UserProfileEdit.models.Info;
 import com.connect.UserProfileEdit.models.UserProfile;
+import com.connect.Utils.CompressImage;
 import com.connect.main.R;
 import com.connect.main.UniversalImageLoader;
 
@@ -34,7 +25,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,13 +44,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class EditProfileFragment extends AppCompatActivity {
 
-    public static String Url = "http://192.168.42.206:8000";
+    public static String BASE_URL;
     private static final String TAG = "EditProfileFragment";
     private EditText mDisplayName, mUsername, mWebsite, mDescription, mEmail, mPhoneNumber,mCity, mCountry, mSex;
     private TextView mChangeProfilePhoto;
     private CircleImageView mProfilePhoto;
     SharedPreferences sharedpreferences;
-    String imgUrl;
+    String imgUrl, imgUrlOld;
     boolean profilePicChanged;
 
 
@@ -72,7 +62,7 @@ public class EditProfileFragment extends AppCompatActivity {
         profilePicChanged = false;
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
 
-
+        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
 
         getProfileData();
         //back arrow for navigating back to "ProfileActivity"
@@ -132,7 +122,7 @@ public class EditProfileFragment extends AppCompatActivity {
         mChangeProfilePhoto = (TextView) findViewById(R.id.changeProfilePhoto);
 
         Retrofit userProfile = new Retrofit.Builder()
-                .baseUrl(Url+"/firstapp/")
+                .baseUrl(BASE_URL+"/firstapp/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -160,7 +150,7 @@ public class EditProfileFragment extends AppCompatActivity {
                 mCountry.setText(response.body().getInfo().getCountry());
                 mSex.setText(response.body().getInfo().getSex());
                 mSex.setEnabled(false);
-                UniversalImageLoader.setImage(Url+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
+                UniversalImageLoader.setImage(BASE_URL+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
                 imgUrl = response.body().getInfo().getProfilePic();
                 System.out.println(response.body().getSelf());
                 System.out.println(response.body().getInfo().getUser().getFirstName());
@@ -188,7 +178,7 @@ public class EditProfileFragment extends AppCompatActivity {
 
 
         Retrofit userProfile = new Retrofit.Builder()
-                .baseUrl(Url+"/firstapp/")
+                .baseUrl(BASE_URL+"/firstapp/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -225,10 +215,13 @@ public class EditProfileFragment extends AppCompatActivity {
 
 
         if(profilePicChanged){
+
+            CompressImage mCompressImage = new CompressImage();
+
             Log.d(TAG,"Profile Pic Changed");
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out = compressImage(imgUrl);
+            out = mCompressImage.compressImage(EditProfileFragment.this,imgUrl);
 
             RequestBody profile_pic = RequestBody.create(MediaType.parse("application/octet-stream"), out.toByteArray());
             String[] bits = imgUrl.split("/");
@@ -263,8 +256,6 @@ public class EditProfileFragment extends AppCompatActivity {
                     mUsername.setText(response.body().getUser().getUsername());
                     mEmail.setText(response.body().getUser().getEmail());
                     System.out.println(response.body());
-                    //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                    //list.add(new Card("http://192.168.42.206:8000"+f.getPost_pics(),f.getAuthor().getUsername()));
                     AlertDialog alertDialog = new AlertDialog.Builder(EditProfileFragment.this).create();
                     alertDialog.setTitle("Success");
                     alertDialog.setMessage("Profile Updated !");
@@ -288,11 +279,20 @@ public class EditProfileFragment extends AppCompatActivity {
                         if (error.has("email")){
                             JSONArray emailArray = new JSONArray(error.get("email").toString());
                             items.add(emailArray.getString(0));
+                            UniversalImageLoader.setImage(BASE_URL+imgUrlOld, mProfilePhoto, null, "");
+                            imgUrl = imgUrlOld;
                         }
-
-                        if (error.has("country")){
+                        else if (error.has("country")){
                             JSONArray emailArray = new JSONArray(error.get("country").toString());
                             items.add(emailArray.getString(0));
+                            UniversalImageLoader.setImage(BASE_URL+imgUrlOld, mProfilePhoto, null, "");
+                            imgUrl = imgUrlOld;
+                        }
+                        else if (error.has("city")){
+                            JSONArray emailArray = new JSONArray(error.get("city").toString());
+                            items.add(emailArray.getString(0));
+                            UniversalImageLoader.setImage(BASE_URL+imgUrlOld, mProfilePhoto, null, "");
+                            imgUrl = imgUrlOld;
                         }
 
 //                        AlertDialog alertDialog = new AlertDialog.Builder(EditProfileFragment.this).create();
@@ -351,7 +351,10 @@ public class EditProfileFragment extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
             if(resultCode == RESULT_OK) {
+                imgUrlOld = imgUrl;
                 imgUrl = data.getStringExtra("imgUrl");
+                System.out.println("Old Image: "+imgUrlOld);
+                System.out.println("New Image: "+imgUrl);
                 UniversalImageLoader.setImage(imgUrl, mProfilePhoto, null,"");
                 imgUrl = imgUrl.replace("file://","");
                 profilePicChanged = true;
@@ -359,177 +362,5 @@ public class EditProfileFragment extends AppCompatActivity {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public ByteArrayOutputStream compressImage(String imageUri) {
-
-        String filePath = getRealPathFromURI(imageUri);
-        Bitmap scaledBitmap = null;
-
-        BitmapFactory.Options options = new BitmapFactory.Options();
-
-//      by setting this field as true, the actual bitmap pixels are not loaded in the memory. Just the bounds are loaded. If
-//      you try the use the bitmap here, you will get null.
-        options.inJustDecodeBounds = true;
-        Bitmap bmp = BitmapFactory.decodeFile(filePath, options);
-
-        int actualHeight = options.outHeight;
-        int actualWidth = options.outWidth;
-
-//      max Height and width values of the compressed image is taken as 816x612
-
-        float maxHeight = 816.0f;
-        float maxWidth = 612.0f;
-        float imgRatio = actualWidth / actualHeight;
-        float maxRatio = maxWidth / maxHeight;
-
-//      width and height values are set maintaining the aspect ratio of the image
-
-        if (actualHeight > maxHeight || actualWidth > maxWidth) {
-            if (imgRatio < maxRatio) {
-                imgRatio = maxHeight / actualHeight;
-                actualWidth = (int) (imgRatio * actualWidth);
-                actualHeight = (int) maxHeight;
-            } else if (imgRatio > maxRatio) {
-                imgRatio = maxWidth / actualWidth;
-                actualHeight = (int) (imgRatio * actualHeight);
-                actualWidth = (int) maxWidth;
-            } else {
-                actualHeight = (int) maxHeight;
-                actualWidth = (int) maxWidth;
-
-            }
-        }
-
-//      setting inSampleSize value allows to load a scaled down version of the original image
-
-        options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
-
-//      inJustDecodeBounds set to false to load the actual bitmap
-        options.inJustDecodeBounds = false;
-
-//      this options allow android to claim the bitmap memory if it runs low on memory
-        options.inPurgeable = true;
-        options.inInputShareable = true;
-        options.inTempStorage = new byte[16 * 1024];
-
-        try {
-//          load the bitmap from its path
-            bmp = BitmapFactory.decodeFile(filePath, options);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
-
-        }
-        try {
-            scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
-        }
-
-        float ratioX = actualWidth / (float) options.outWidth;
-        float ratioY = actualHeight / (float) options.outHeight;
-        float middleX = actualWidth / 2.0f;
-        float middleY = actualHeight / 2.0f;
-
-        Matrix scaleMatrix = new Matrix();
-        scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
-
-        Canvas canvas = new Canvas(scaledBitmap);
-        canvas.setMatrix(scaleMatrix);
-        canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
-
-//      check the rotation of the image and display it properly
-        ExifInterface exif;
-        try {
-            exif = new ExifInterface(filePath);
-
-            int orientation = exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION, 0);
-            Log.d("EXIF", "Exif: " + orientation);
-            Matrix matrix = new Matrix();
-            if (orientation == 6) {
-                matrix.postRotate(90);
-                Log.d("EXIF", "Exif: " + orientation);
-            } else if (orientation == 3) {
-                matrix.postRotate(180);
-                Log.d("EXIF", "Exif: " + orientation);
-            } else if (orientation == 8) {
-                matrix.postRotate(270);
-                Log.d("EXIF", "Exif: " + orientation);
-            }
-            scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
-                    scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
-                    true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        //FileOutputStream out = null;
-        String filename = getFilename();
-        //out = new FileOutputStream(filename);
-
-//          write the compressed bitmap at the destination specified by filename.
-        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
-
-        return out;
-
-    }
-
-    public String getFilename() {
-        File file = new File(Environment.getExternalStorageDirectory().getPath(), "MyFolder/Images");
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        String uriSting = (file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".jpg");
-        return uriSting;
-
-    }
-
-    private String getRealPathFromURI(String contentURI) {
-        Uri contentUri = Uri.parse(contentURI);
-        Cursor cursor = getContentResolver().query(contentUri, null, null, null, null);
-        if (cursor == null) {
-            return contentUri.getPath();
-        } else {
-            cursor.moveToFirst();
-            int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            return cursor.getString(index);
-        }
-    }
-
-    public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-            final int heightRatio = Math.round((float) height / (float) reqHeight);
-            final int widthRatio = Math.round((float) width / (float) reqWidth);
-            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
-        }
-        final float totalPixels = width * height;
-        final float totalReqPixelsCap = reqWidth * reqHeight * 2;
-        while (totalPixels / (inSampleSize * inSampleSize) > totalReqPixelsCap) {
-            inSampleSize++;
-        }
-
-        return inSampleSize;
-    }
-
-
-
 
 }

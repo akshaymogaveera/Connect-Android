@@ -1,14 +1,8 @@
 package com.connect.Comments;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,19 +10,22 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.connect.Comments.models.CommentLinear;
-import com.connect.Comments.models.Comments;
-import com.connect.Likes.LikeApi;
-import com.connect.NewsFeed.Card;
-import com.connect.NewsFeed.NewsFeedApi;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.connect.Comments.model.CommentLinear;
+import com.connect.Comments.model.Comments;
 import com.connect.NewsFeed.NewsFeedFragment;
-import com.connect.NewsFeed.model.Feed;
 import com.connect.main.R;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,11 +52,18 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
     CommentsRecyclerView adapter;
     private Context mContext;
     EditText commentContent;
+    String BASE_URL;
+    int page=1;
+    HashSet<Integer> pageSet = new HashSet<>();
+    LinearLayoutManager linearLayoutManager;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_all_comments);
+
+        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
 
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
 
@@ -68,6 +72,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
         mListView = (RecyclerView) findViewById(R.id.commentRecycleList);
 
         commentContent = (EditText) findViewById(R.id.commentText);
+        mSwipeRefreshLayout = findViewById(R.id.swipeRefreshCommentsList);
 
         list = new ArrayList<>();
         mapping = new HashMap<>();
@@ -90,13 +95,74 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Log.d(TAG, "onClick: navigating Save changes");
                 addComment(id);
+                commentContent.setText("");
 
             }
         });
 
+        final boolean[] loading = {true};
+        final int[] pastVisiblesItems = new int[1];
+        final int[] visibleItemCount = new int[1];
+        final int[] totalItemCount = new int[1];
+
+        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) { //check for scroll down
+                    visibleItemCount[0] = linearLayoutManager.getChildCount();
+                    totalItemCount[0] = linearLayoutManager.getItemCount();
+                    pastVisiblesItems[0] = linearLayoutManager.findFirstVisibleItemPosition();
+
+                    if (loading[0]) {
+                        if ((visibleItemCount[0] + pastVisiblesItems[0]) >= totalItemCount[0]) {
+                            loading[0] = false;
+                            Log.v("...", "Last Item Wow !");
+                            Log.v("...", "Visible "+visibleItemCount[0]);
+                            Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
+                            Log.v("...", "totalItemCount "+totalItemCount[0]);
+                            // Do pagination.. i.e. fetch new data
+                            page = (totalItemCount[0]/14)+1;
+                            Log.v("...", "Page "+page);
+
+                            if(!pageSet.contains(page)){
+                                pageSet.add(page);
+                                executeObservables(id, page);
+                            }
+
+                            loading[0] = true;
+                        }
+                    }
+                }
+            }
+        });
+
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to make your refresh action
+                // CallYourRefreshingMethod();
+                list.clear();
+                mapping.clear();
+                pageSet.clear();
+                executeObservables(id, 1);
+                pageSet.add(1);
+                mSwipeRefreshLayout.setRefreshing(false);
+                //adapter.notifyDataSetChanged();
+            }
 
 
-        getCommentsObservable(id)
+
+        });
+
+        executeObservables(id,1);
+        pageSet.add(1);
+
+    }
+
+    private void executeObservables(String id, int page){
+
+
+        getCommentsObservable(id,page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<Comments, ObservableSource<Comments>>() {
@@ -131,18 +197,14 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
 
     }
 
-    private Observable<Comments> getCommentsObservable(String id){
+    private Observable<Comments> getCommentsObservable(String id, int page){
 
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
         headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
 
         return CommentsApi.getRequestApi()
-                .getCommentsList(new HashMap<String, String>()
-                {{
-                    put("id", id);
-
-                }},headerMap)
+                .getCommentsList(headerMap,Integer.parseInt(id), page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<List<Comments>, ObservableSource<Comments>>() {
@@ -157,10 +219,18 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
                             list.add(temp);
                         }
 
-                        //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                        adapter = new CommentsRecyclerView(mContext, R.layout.comment_linear_view, list , mapping);
-                        mListView.setAdapter(adapter);
-                        mListView.setLayoutManager(new LinearLayoutManager(mContext));
+                        if(page == 1){
+
+                            //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
+                            adapter = new CommentsRecyclerView(mContext, R.layout.comment_linear_view, list , mapping);
+                            mListView.setAdapter(adapter);
+                            linearLayoutManager = new LinearLayoutManager(mContext);
+                            mListView.setLayoutManager(linearLayoutManager);
+
+                        }
+                        else{
+                            adapter.notifyDataSetChanged();
+                        }
 
                         //adapter.setPosts(posts);
                         //System.out.println(posts.get(0).getAuthor()+"---------");
@@ -197,7 +267,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
 
                         CommentLinear temp = mapping.get(comments.getId().toString());
                         int pos = list.indexOf(temp);
-                        temp.setProfile_pic("http://192.168.42.206:8000"+profile_pic);
+                        temp.setProfile_pic(BASE_URL+profile_pic);
                         mapping.replace(comments.getId().toString(),temp);
                         list.set(pos,temp);
 

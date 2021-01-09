@@ -3,6 +3,8 @@ package com.connect.Auth;
 import android.content.Context;
 import android.util.Log;
 
+import com.connect.main.R;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,7 +64,7 @@ public class Validate {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(client)
-                .baseUrl("http://192.168.42.206:8000/firstapp/basic/")
+                .baseUrl("http://"+mContext.getResources().getString(R.string.ip)+":8000/firstapp/basic/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 

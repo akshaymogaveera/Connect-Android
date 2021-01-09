@@ -21,6 +21,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/white_grey_border_bottom">
 
+
                 <ImageView
                     android:layout_width="217dp"
                     android:layout_height="45dp"
@@ -28,11 +29,13 @@
                     android:scaleType="centerInside"
                     app:srcCompat="@drawable/connect_text" />
 
+
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/tabs"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/white_grey_border_bottom">
+
 
                 </com.google.android.material.tabs.TabLayout>
 

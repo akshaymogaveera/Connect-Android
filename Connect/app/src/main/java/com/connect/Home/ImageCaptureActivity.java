@@ -1,47 +1,30 @@
 package com.connect.Home;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-
 import android.annotation.SuppressLint;
-import android.content.ActivityNotFoundException;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.os.Bundle;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.connect.Utils.Permissions;
-import com.connect.main.MainActivity;
 import com.connect.main.R;
 import com.connect.main.UniversalImageLoader;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nostra13.universalimageloader.core.ImageLoader;
-
-import java.io.ByteArrayOutputStream;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
-import java.io.File;
-import java.util.zip.Inflater;
-
-import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 
 /**
@@ -87,15 +70,17 @@ public class ImageCaptureActivity extends AppCompatActivity {
 //                selectImage(ImageCaptureActivity.this);
 //            }
 //        });
+
     }
 
     private void selectImage(Context context) {
         final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Choose your profile picture");
+        builder.setTitle("Choose your profile picture").setCancelable(false);
 
         builder.setItems(options, new DialogInterface.OnClickListener() {
+
 
             @Override
             public void onClick(DialogInterface dialog, int item) {
@@ -117,11 +102,18 @@ public class ImageCaptureActivity extends AppCompatActivity {
                     }
 
 
+
                 } else if (options[item].equals("Cancel")) {
                     dialog.dismiss();
                     finish();
                 }
+                else{
+                    dialog.dismiss();
+                    finish();
+                }
             }
+
+
         });
         builder.show();
     }
@@ -132,6 +124,7 @@ public class ImageCaptureActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        System.out.println(requestCode+"====================="+CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE+"   "+RESULT_OK+"="+resultCode);
 
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
@@ -195,6 +188,9 @@ public class ImageCaptureActivity extends AppCompatActivity {
                     break;
 
             }
+        }
+        else if (resultCode == 0){
+            finish();
         }
     }
 

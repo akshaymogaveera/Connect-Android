@@ -145,15 +145,6 @@
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/viewcomments"
-                android:layout_width="match_parent"
-                android:layout_height="25dp"
-                android:layout_below="@+id/likescomments"
-                android:layout_marginLeft="10dp"
-                android:layout_marginTop="5dp"
-                android:text="View all comments"
-                tools:visibility="gone" />
 
             <ProgressBar
                 android:id="@+id/cardProgressDialog"

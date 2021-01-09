@@ -6,34 +6,27 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.connect.Comments.ViewAllCommentsActivity;
+import com.connect.Home.HomeActivity;
+import com.connect.Likes.LikesListActivity;
 import com.connect.Profile.UserProfileActivity;
-import com.connect.UserProfileEdit.models.UserProfile;
 import com.connect.main.R;
-import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.ArrayList;
@@ -45,7 +38,7 @@ import static com.connect.Post.CreatePostApiCall.deletePost;
 public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerView.NewsFeedViewHolder> {
 
 
-    private static final String TAG = "NewFeedRecyclerView";
+    private static final String TAG = "NewsFeedRecyclerView";
 
     private Context mContext;
     private int mResource;
@@ -59,9 +52,11 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
         this.list = list;
         this.mapping = mapping;
 
-        setupImageLoader();
+        com.connect.Utils.ImageLoader imageLoader = new com.connect.Utils.ImageLoader();
+        imageLoader.setupImageLoader(mContext);
 
     }
+
 
 
     @NonNull
@@ -88,13 +83,13 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
             holder.likesCount.setText(card.getCountLikes());
             holder.caption.setText(card.getCaption());
 
-            if(Integer.valueOf(card.getCountComments()) > 0){
-                Log.d(TAG," view all comments: "+card.getCountComments());
-                holder.viewAllComments.setVisibility(View.VISIBLE);
-            }
-            else{
-                holder.viewAllComments.setVisibility(View.GONE);
-            }
+//            if(Integer.valueOf(card.getCountComments()) > 0){
+//                Log.d(TAG," view all comments: "+card.getCountComments());
+//                holder.viewAllComments.setVisibility(View.VISIBLE);
+//            }
+//            else{
+//                holder.viewAllComments.setVisibility(View.GONE);
+//            }
 
 
             if(card.isLiked()){
@@ -177,7 +172,21 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
                 }
             });
 
-            holder.viewAllComments.setOnClickListener(new View.OnClickListener() {
+            holder.cardLikes.setOnClickListener(new View.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.N)
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "View All likes button clicked");
+                    Intent intent = new Intent(mContext, LikesListActivity.class);
+                    intent.putExtra("post_id",card.getId());
+                    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
+                    //startActivity(intent);
+                    mContext.startActivity(intent);
+
+                }
+            });
+
+            holder.commentImage.setOnClickListener(new View.OnClickListener() {
                 @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
                 public void onClick(View v) {
@@ -193,19 +202,32 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
 
             //Go to users profile
 
-            holder.cardTitle.setOnClickListener(new View.OnClickListener() {
-                @RequiresApi(api = Build.VERSION_CODES.N)
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "View All comments button clicked");
-                    Intent intent = new Intent(mContext, UserProfileActivity.class);
-                    intent.putExtra("id",card.getAuthorid());
-                    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
-                    //startActivity(intent);
-                    mContext.startActivity(intent);
+            if(mContext.toString().contains("Home"))
+            {
+                holder.cardTitle.setOnClickListener(new View.OnClickListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.N)
+                    @Override
+                    public void onClick(View v) {
+                        Log.d(TAG, "Profile Name clicked");
 
-                }
-            });
+                        if(HomeActivity.getId().equals(card.getAuthorid())){
+
+                            Log.d(TAG, "Same User clicked");
+
+                        }
+                        else{
+
+                            Intent intent = new Intent(mContext, UserProfileActivity.class);
+                            intent.putExtra("id",card.getAuthorid());
+                            //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
+                            //startActivity(intent);
+                            mContext.startActivity(intent);
+
+                        }
+                    }
+                });
+            }
+
 
             //create display options
             DisplayImageOptions options = new DisplayImageOptions.Builder().cacheInMemory(true)
@@ -215,26 +237,41 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
                     .showImageOnLoading(defaultImage).build();
 
             //download and display image from url
-            imageLoader.displayImage(card.getImgURL(), holder.image, options,new ImageLoadingListener() {
-                @Override
-                public void onLoadingStarted(String imageUri, View view) {
-                    holder.dialog.setVisibility(View.VISIBLE);
-                }
-                @Override
-                public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-                    holder.dialog.setVisibility(View.GONE);
-                    holder.image.setVisibility(View.GONE);
-                }
-                @Override
-                public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                    holder.dialog.setVisibility(View.GONE);
-                }
-                @Override
-                public void onLoadingCancelled(String imageUri, View view) {
 
-                }}
+            holder.image.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    holder.image.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    //Load an image to your IMAGEVIEW here
 
-            );
+                    imageLoader.displayImage(card.getImgURL(), holder.image, options,new ImageLoadingListener() {
+                        @Override
+                        public void onLoadingStarted(String imageUri, View view) {
+                            holder.dialog.setVisibility(View.VISIBLE);
+                        }
+                        @Override
+                        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+                            holder.dialog.setVisibility(View.GONE);
+                            holder.image.setVisibility(View.GONE);
+                            Log.d(TAG, "Image Loading failed");
+                            holder.dialog.setVisibility(View.VISIBLE);
+                        }
+                        @Override
+                        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                            holder.dialog.setVisibility(View.GONE);
+                            Log.d(TAG, "Image Loading Complete");
+                            Log.d(TAG, card.getCaption()+"  "+card.getImgURL().toString());
+                        }
+                        @Override
+                        public void onLoadingCancelled(String imageUri, View view) {
+                            Log.d(TAG, "Image Loading Cancelled");
+
+                        }}
+
+                    );
+                }
+            });
+
 
 
             //download and display image from url
@@ -273,8 +310,8 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
 
     class NewsFeedViewHolder extends RecyclerView.ViewHolder{
 
-        TextView title, likesCount, commentCount, viewAllComments, caption, cardTitle;
-        ImageView image, likeImage, profile_photo_newsfeed;
+        TextView title, likesCount, commentCount, cardLikes, caption, cardTitle;
+        ImageView image, likeImage, profile_photo_newsfeed, commentImage;
         ProgressBar dialog;
         MenuItem deleteOption;
         Toolbar toolbar;
@@ -291,7 +328,8 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
             likesCount = (TextView)  itemView.findViewById(R.id.cardLikes);
             commentCount = (TextView)  itemView.findViewById(R.id.cardComments);
             likeImage = (ImageView) itemView.findViewById(R.id.likeImage);
-            viewAllComments =  (TextView) itemView.findViewById(R.id.viewcomments);
+            commentImage = (ImageView) itemView.findViewById(R.id.commentImage);
+            cardLikes =  (TextView) itemView.findViewById(R.id.cardLikes);
             caption = (TextView)  itemView.findViewById(R.id.caption);
             deleteOption = itemView.findViewById(R.id.delete);
             toolbar = itemView.findViewById(R.id.linearabove);
@@ -300,71 +338,18 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
         }
     }
 
-    /**
-     * Required for setting up the Universal Image loader Library
-     */
-    private void setupImageLoader(){
-        // UNIVERSAL IMAGE LOADER SETUP
-        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
-                .cacheOnDisc(true).cacheInMemory(true)
-                .imageScaleType(ImageScaleType.EXACTLY)
-                .displayer(new FadeInBitmapDisplayer(300)).build();
 
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
-                mContext)
-                .defaultDisplayImageOptions(defaultOptions)
-                .memoryCache(new WeakMemoryCache())
-                .discCacheSize(100 * 1024 * 1024).build();
 
-        ImageLoader.getInstance().init(config);
-        // END - UNIVERSAL IMAGE LOADER SETUP
+    @Override
+    public long getItemId(int position) {
+        return position;
     }
 
+    @Override
+    public int getItemViewType(int position) {
 
+        return position;
 
+    }
 
-
-//    private static final String TAG = "NewFeedRecyclerView";
-//
-//    private Context mContext;
-//    private int mResource;
-//    private int lastPosition = -1;
-//
-//    public NewFeedRecyclerView(Context mContext) {
-//        this.mContext = mContext;
-//    }
-//
-//    @NonNull
-//    @Override
-//    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        return null;
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(@NonNull  RecyclerView.ViewHolder holder, int position) {
-//
-//    }
-//
-//    @Override
-//    public int getItemCount() {
-//        return 0;
-//    }
-//
-//    public class ViewHolder extends RecyclerView.ViewHolder{
-//
-//        TextView title, likesCount, commentCount;
-//        ImageView image;
-//        ProgressBar dialog;
-//
-//        public ViewHolder(View itemView) {
-//            super(itemView);
-//            title = (TextView) itemView.findViewById(R.id.cardTitle);
-//            image = (ImageView) itemView.findViewById(R.id.cardImage);
-//            dialog = (ProgressBar) itemView.findViewById(R.id.cardProgressDialog);
-//            likesCount = (TextView)  itemView.findViewById(R.id.cardLikes);
-//            commentCount = (TextView)  itemView.findViewById(R.id.cardComments);
-//
-//
-//        }
-//    }
 }

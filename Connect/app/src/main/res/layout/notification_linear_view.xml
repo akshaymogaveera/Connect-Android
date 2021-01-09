@@ -9,14 +9,21 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginLeft="3dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="3dp"
+        android:layout_marginRight="3dp"
+        android:background="@drawable/white_grey_border_top"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
 
         <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/profile_photo_search"
+            android:id="@+id/profile_photo_notification"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_centerHorizontal="true"
@@ -27,22 +34,21 @@
             app:civ_border_width="1dp" />
 
         <TextView
-            android:id="@+id/text"
-            android:text="akshay mogaveera and 5 others liked your pic"
-            android:textSize="25sp"
+            android:id="@+id/notificationtext"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:paddingLeft="10dp"
-            android:textStyle="bold"
-            android:paddingTop="15dp"/>
+            android:paddingTop="15dp"
+            android:text="akshay mogaveera and 5 others liked your pic"
+            android:textSize="25sp"
+            android:textStyle="bold" />
 
         <ImageView
-            android:paddingTop="20dp"
-            android:id="@+id/post_pic"
+            android:id="@+id/post_pic_notification"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:paddingTop="20dp"
             android:src="@drawable/ic_android" />
-
 
 
     </LinearLayout>

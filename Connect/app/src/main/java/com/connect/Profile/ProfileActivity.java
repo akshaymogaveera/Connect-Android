@@ -1,11 +1,5 @@
 package com.connect.Profile;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,8 +10,16 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.connect.Comments.CommentsApi;
 import com.connect.Friends.FriendsApi;
+import com.connect.Friends.FriendsListActivity;
+import com.connect.Home.HomeActivity;
 import com.connect.NewsFeed.Card;
 import com.connect.NewsFeed.NewsFeedApi;
 import com.connect.NewsFeed.NewsFeedFragment;
@@ -34,6 +36,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,9 +58,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "ProfileActivity";
-    TextView countPosts, countFriends, mDisplayName, mUsername, textEditProfile;
-    String BASE_URL = "http://192.168.42.206:8000/firstapp/";
-    public static String Url = "http://192.168.42.206:8000";
+    TextView countPosts, countFriends, mDisplayName, mUsername, textEditProfile, location;
+    String BASE_URL;
+    //public static String Url = "http://192.168.42.206:8000";
     private CircleImageView mProfilePhoto;
     SharedPreferences sharedpreferences;
     ArrayList<Card> list;
@@ -70,6 +73,9 @@ public class ProfileActivity extends AppCompatActivity {
     String countLikes, countComments, id;
     private Context mContext = ProfileActivity.this;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    int page=1;
+    HashSet<Integer> pageSet = new HashSet<>();
+    LinearLayoutManager linearLayoutManager;
 
 
     @Override
@@ -85,6 +91,8 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
         countPosts = findViewById(R.id.countPosts);
         countFriends = findViewById(R.id.countFollowers);
@@ -92,6 +100,8 @@ public class ProfileActivity extends AppCompatActivity {
         mDisplayName = findViewById(R.id.display_name);
         mUsername =  findViewById(R.id.profileName);
         textEditProfile =  findViewById(R.id.textEditProfile);
+
+        location = findViewById(R.id.location);
 
         mListView = (RecyclerView) findViewById(R.id.listView);
         mSwipeRefreshLayout = findViewById(R.id.swiperefresh_newsfeed);
@@ -116,6 +126,54 @@ public class ProfileActivity extends AppCompatActivity {
             }
         });
 
+        countFriends.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: navigating to EditProfileActivity");
+                Intent intent1 = new Intent(ProfileActivity.this, FriendsListActivity.class);
+                intent1.putExtra("id", HomeActivity.getId());
+                intent1.putExtra("action", "friendList");
+                startActivity(intent1);
+                //finish();
+            }
+        });
+
+        final boolean[] loading = {true};
+        final int[] pastVisiblesItems = new int[1];
+        final int[] visibleItemCount = new int[1];
+        final int[] totalItemCount = new int[1];
+
+        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) { //check for scroll down
+                    visibleItemCount[0] = linearLayoutManager.getChildCount();
+                    totalItemCount[0] = linearLayoutManager.getItemCount();
+                    pastVisiblesItems[0] = linearLayoutManager.findFirstVisibleItemPosition();
+
+                    if (loading[0]) {
+                        if ((visibleItemCount[0] + pastVisiblesItems[0]) >= totalItemCount[0]) {
+                            loading[0] = false;
+                            Log.v("...", "Last Item Wow !");
+                            Log.v("...", "Visible "+visibleItemCount[0]);
+                            Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
+                            Log.v("...", "totalItemCount "+totalItemCount[0]);
+                            // Do pagination.. i.e. fetch new data
+                            page = (totalItemCount[0]/2)+1;
+                            Log.v("...", "Page "+page);
+
+                            if(!pageSet.contains(page)){
+                                pageSet.add(page);
+                                executeObservables(page);
+                            }
+
+                            loading[0] = true;
+                        }
+                    }
+                }
+            }
+        });
+
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -123,10 +181,12 @@ public class ProfileActivity extends AppCompatActivity {
                 // CallYourRefreshingMethod();
                 list.clear();
                 mapping.clear();
+                pageSet.clear();
                 getPostsCount();
                 getFriendsCount();
                 getProfileData();
-                executeObservables();
+                executeObservables(1);
+                pageSet.add(1);
                 mSwipeRefreshLayout.setRefreshing(false);
                 //adapter.notifyDataSetChanged();
             }
@@ -135,7 +195,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         });
 
-        executeObservables();
+        executeObservables(1);
+        pageSet.add(1);
     }
 
     private void getPostsCount(){
@@ -233,7 +294,7 @@ public class ProfileActivity extends AppCompatActivity {
     public void getProfileData(){
 
         Retrofit userProfile = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(BASE_URL+"/firstapp/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -253,10 +314,11 @@ public class ProfileActivity extends AppCompatActivity {
                 Log.d(TAG, "onResponse: received information: " + response.errorBody());
 
                 mUsername.setText(response.body().getInfo().getUser().getUsername());
+                location.setText(response.body().getInfo().getCity());
                 mUsername.setEnabled(false);
                 mDisplayName.setText(response.body().getInfo().getUser().getFirstName()+" "+response.body().getInfo().getUser().getLastName());
                 mDisplayName.setEnabled(false);
-                UniversalImageLoader.setImage(Url+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
+                UniversalImageLoader.setImage(BASE_URL+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
                 System.out.println(response.body().getSelf());
                 System.out.println(response.body().getInfo().getUser().getFirstName());
                 //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
@@ -273,9 +335,9 @@ public class ProfileActivity extends AppCompatActivity {
 
     }
 
-    private void executeObservables(){
+    private void executeObservables(int page){
 
-        getPostsObservable()
+        getPostsObservable(page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<Feed, ObservableSource<Feed>>() {
@@ -331,17 +393,13 @@ public class ProfileActivity extends AppCompatActivity {
 
     }
 
-    private Observable<Feed> getPostsObservable(){
+    private Observable<Feed> getPostsObservable(int page){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
         headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
 
         return NewsFeedApi.getRequestApi()
-                .getUserFeed(new HashMap<String, String>()
-                {{
-                    put("id", sharedpreferences.getString("id", null));
-
-                }},headerMap)
+                .getUserFeed(headerMap,Integer.parseInt(sharedpreferences.getString("id", null)),page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<List<Feed>, ObservableSource<Feed>>() {
@@ -351,15 +409,21 @@ public class ProfileActivity extends AppCompatActivity {
                         for (Feed post: posts) {
                             System.out.println(post.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(post.getAuthor().getId(), post.getId(), "http://192.168.42.206:8000"+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
+                            Card temp = new Card(post.getAuthor().getId(), post.getId(), BASE_URL+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
                             mapping.put(post.getId(),temp);
                             list.add(temp);
                         }
 
-                        //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                        adapter = new NewsFeedRecyclerView(mContext, R.layout.card_layout_main, list , mapping);
-                        mListView.setAdapter(adapter);
-                        mListView.setLayoutManager(new LinearLayoutManager(mContext));
+                        if (page == 1) {
+                            //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
+                            adapter = new NewsFeedRecyclerView(mContext, R.layout.card_layout_main, list, mapping);
+                            mListView.setAdapter(adapter);
+                            linearLayoutManager = new LinearLayoutManager(mContext);
+                            mListView.setLayoutManager(linearLayoutManager);
+                        }
+                        else{
+                            adapter.notifyDataSetChanged();
+                        }
 
                         //adapter.setPosts(posts);
                         System.out.println(posts.get(0).getAuthor()+"---------");
@@ -517,7 +581,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                         Card temp = mapping.get(post.getId());
                         int pos = list.indexOf(temp);
-                        temp.setProfileImgUrl("http://192.168.42.206:8000"+profile_pic);
+                        temp.setProfileImgUrl(BASE_URL+profile_pic);
                         mapping.replace(post.getId(),temp);
                         list.set(pos,temp);
 

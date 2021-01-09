@@ -86,23 +86,15 @@
                     android:textStyle="bold"/>
 
                 <TextView
-                    android:id="@+id/description"
+                    android:id="@+id/location"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="I live in Vancouver, BC"
+                    android:text="Mumbai"
                     android:textColor="@color/black"
                     android:textSize="16sp"/>
 
-                <TextView
-                    android:id="@+id/website"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:text="https://codingwithmitch.com"
-                    android:textColor="@color/link_blue"
-                    android:textSize="16sp"
-                    />
+
 
 
             </LinearLayout>
@@ -111,8 +103,7 @@
                 android:id="@+id/relLayout3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/linLayout2"
-                android:layout_marginBottom="50dp">
+                android:layout_below="@+id/linLayout2">
 
                 <!--GridView
                     android:id="@+id/gridView"

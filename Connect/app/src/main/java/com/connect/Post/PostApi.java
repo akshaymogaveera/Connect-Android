@@ -1,5 +1,10 @@
 package com.connect.Post;
 
+import android.content.res.Resources;
+
+import com.connect.Home.HomeActivity;
+import com.connect.main.R;
+
 import java.util.Map;
 
 import okhttp3.MultipartBody;
@@ -22,7 +27,7 @@ import retrofit2.http.PartMap;
 
 public interface PostApi {
 
-    String BASE_URL = "http://192.168.42.206:8000/firstapp/";
+    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
 
     @Multipart
     @POST("post/")

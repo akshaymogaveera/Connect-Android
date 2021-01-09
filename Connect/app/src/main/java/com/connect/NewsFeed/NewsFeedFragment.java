@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -45,19 +46,24 @@ public class NewsFeedFragment extends Fragment {
     //CustomListAdapter adapter;
     NewsFeedRecyclerView adapter;
     private static final String TAG = "NewsFeedActivity";
-    private static final String BASE_URL = "http://192.168.42.206:8000/firstapp/";
+    private static String BASE_URL;
     public static SharedPreferences sharedpreferences;
     String countLikes, countComments, id, profileImgUrl;
     ArrayList<Card> list;
     HashMap<String, Card> mapping;
     boolean liked;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    LinearLayoutManager linearLayoutManager;
+    int page =1;
+    HashSet<Integer> pageSet = new HashSet<>();
 
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_news_feed,container,false);
+
+        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
 
         sharedpreferences = this.getActivity().getSharedPreferences("myKey", MODE_PRIVATE);
         sharedpreferencesobs = this.getActivity().getSharedPreferences("myKey", MODE_PRIVATE);
@@ -79,9 +85,11 @@ public class NewsFeedFragment extends Fragment {
             public void onRefresh() {
                 // Your code to make your refresh action
                 // CallYourRefreshingMethod();
+                pageSet.clear();
                 list.clear();
                 mapping.clear();
-                executeObservables();
+                executeObservables(1);
+                pageSet.add(1);
                 mSwipeRefreshLayout.setRefreshing(false);
                 //adapter.notifyDataSetChanged();
             }
@@ -90,16 +98,53 @@ public class NewsFeedFragment extends Fragment {
 
         });
 
-        executeObservables();
+        final boolean[] loading = {true};
+        final int[] pastVisiblesItems = new int[1];
+        final int[] visibleItemCount = new int[1];
+        final int[] totalItemCount = new int[1];
+
+        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) { //check for scroll down
+                    visibleItemCount[0] = linearLayoutManager.getChildCount();
+                    totalItemCount[0] = linearLayoutManager.getItemCount();
+                    pastVisiblesItems[0] = linearLayoutManager.findFirstVisibleItemPosition();
+
+                    if (loading[0]) {
+                        if ((visibleItemCount[0] + pastVisiblesItems[0]) >= totalItemCount[0]) {
+                            loading[0] = false;
+                            Log.v("...", "Last Item Wow !");
+                            Log.v("...", "Visible "+visibleItemCount[0]);
+                            Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
+                            Log.v("...", "totalItemCount "+totalItemCount[0]);
+                            // Do pagination.. i.e. fetch new data
+                            page = (totalItemCount[0]/2)+1;
+                            Log.v("...", "Page "+page);
+
+                            if(!pageSet.contains(page)){
+                                pageSet.add(page);
+                                executeObservables(page);
+                            }
+
+                            loading[0] = true;
+                        }
+                    }
+                }
+            }
+        });
+
+        executeObservables(1);
+        pageSet.add(1);
 
 
 
         return view;
     }
 
-    private void executeObservables(){
+    private void executeObservables(int page){
 
-        getPostsObservable()
+        getPostsObservable(page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<Feed, ObservableSource<Feed>>() {
@@ -155,13 +200,13 @@ public class NewsFeedFragment extends Fragment {
 
     }
 
-    private Observable<Feed> getPostsObservable(){
+    private Observable<Feed> getPostsObservable(int page){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
         headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
 
         return NewsFeedApi.getRequestApi()
-                .getObsData(headerMap)
+                .getObsData(headerMap, page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<List<Feed>, ObservableSource<Feed>>() {
@@ -171,15 +216,22 @@ public class NewsFeedFragment extends Fragment {
                         for (Feed post: posts) {
                             System.out.println(post.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(post.getAuthor().getId(), post.getId(), "http://192.168.42.206:8000"+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
+                            Card temp = new Card(post.getAuthor().getId(), post.getId(), BASE_URL+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
                             mapping.put(post.getId(),temp);
                             list.add(temp);
                         }
 
-                        //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                        adapter = new NewsFeedRecyclerView(getActivity(), R.layout.card_layout_main, list , mapping);
-                        mListView.setAdapter(adapter);
-                        mListView.setLayoutManager(new LinearLayoutManager(getActivity()));
+                        if (page == 1){
+
+                            //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
+                            adapter = new NewsFeedRecyclerView(getActivity(), R.layout.card_layout_main, list , mapping);
+                            mListView.setAdapter(adapter);
+                            linearLayoutManager = new LinearLayoutManager(getActivity());
+                            mListView.setLayoutManager(linearLayoutManager);
+                        }
+                        else {
+                            adapter.notifyDataSetChanged();
+                        }
 
                         //adapter.setPosts(posts);
                         System.out.println(posts.get(0).getAuthor()+"---------");
@@ -337,7 +389,7 @@ public class NewsFeedFragment extends Fragment {
 
                         Card temp = mapping.get(post.getId());
                         int pos = list.indexOf(temp);
-                        temp.setProfileImgUrl("http://192.168.42.206:8000"+profile_pic);
+                        temp.setProfileImgUrl(BASE_URL+profile_pic);
                         mapping.replace(post.getId(),temp);
                         list.set(pos,temp);
 

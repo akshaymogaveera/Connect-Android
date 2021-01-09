@@ -87,9 +87,10 @@ public class MainActivity extends AppCompatActivity {
                     .addInterceptor(provideOfflineCacheInterceptor())
                     .build();
 
+
             Retrofit retrofit = new Retrofit.Builder()
                     //.client(httpClient)
-                    .baseUrl("http://192.168.42.206:8000/firstapp/")
+                    .baseUrl("http://"+getResources().getString(R.string.ip)+":8000/firstapp/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 

@@ -1,19 +1,14 @@
 package com.connect.NewsFeed;
 
-import com.connect.Auth.BasicAuthInterceptor;
-import com.connect.Auth.Validate;
+import com.connect.Home.HomeActivity;
 import com.connect.NewsFeed.model.Feed;
+import com.connect.main.R;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
-import io.reactivex.Observable;
 
-import okhttp3.Cache;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
+import io.reactivex.Observable;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -22,17 +17,14 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.Headers;
-import retrofit2.http.Multipart;
 import retrofit2.http.POST;
-import retrofit2.http.Part;
-import retrofit2.http.PartMap;
-
-import static com.connect.Auth.Validate.httpLoggingInterceptor;
-import static com.connect.Auth.Validate.provideOfflineCacheInterceptor;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface NewsFeedApi {
 
-    String BASE_URL = "http://192.168.42.206:8000/firstapp/";
+    //String BASE_URL = "http://192.168.42.206:8000/firstapp/";
+    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
 //
 //    int cacheSize = 10 * 1024 * 1024;
 //    Cache cache = Validate.cache;
@@ -48,25 +40,48 @@ public interface NewsFeedApi {
     );
 
     @Headers("Content-Type: application/json")
+    @GET("newsfeed/pagination/")
+    Call<List<Feed>> getData1(
+            @HeaderMap Map<String, String> headers,
+            @Query("page") int page
+    );
+
+    @Headers("Content-Type: application/json")
     @POST("post/likes/count/")
     Call<ResponseBody> countLikes(
             @Body Map<String, String> body,
             @HeaderMap Map<String, String> headers
     );
 
+//    @Headers("Content-Type: application/json")
+//    @GET("newsfeed/")
+//    Observable<List<Feed>> getObsData(
+//            @HeaderMap Map<String, String> headers
+//    );
+
+
     @Headers("Content-Type: application/json")
-    @GET("newsfeed/")
+    @GET("newsfeed/pagination/")
     Observable<List<Feed>> getObsData(
-            @HeaderMap Map<String, String> headers
+            @HeaderMap Map<String, String> headers,
+            @Query("page") int page
     );
+
+
+//    @Headers("Content-Type: application/json")
+//    @POST("user/feed/")
+//    Observable<List<Feed>> getUserFeed(
+//            @Body Map<String, String> body,
+//            @HeaderMap Map<String, String> headers
+//    );
 
     @Headers("Content-Type: application/json")
-    @POST("user/feed/")
+    @GET("user/{id}/feed/")
     Observable<List<Feed>> getUserFeed(
-            @Body Map<String, String> body,
-            @HeaderMap Map<String, String> headers
+            @HeaderMap Map<String, String> headers,
+            @Path("id") int id,
+            @Query("page") int page
     );
-
 
     @Headers("Content-Type: application/json")
     @POST("post/likes/count/")

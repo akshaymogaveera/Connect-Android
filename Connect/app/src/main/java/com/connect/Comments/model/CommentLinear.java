@@ -1,4 +1,4 @@
-package com.connect.Comments.models;
+package com.connect.Comments.model;
 
 public class CommentLinear {
 

@@ -20,7 +20,7 @@
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 
-        <include layout="@layout/layout_bottom_navigation_view"/>
+        <!--include layout="@layout/layout_bottom_navigation_view"/-->
 
         <ProgressBar
             android:id="@+id/profileProgressBar"

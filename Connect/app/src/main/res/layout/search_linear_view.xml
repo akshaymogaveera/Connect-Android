@@ -9,6 +9,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginRight="4dp"
+        android:background="@drawable/white_grey_border_top"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,21 +33,21 @@
 
         <TextView
             android:id="@+id/firstname"
-            android:textSize="25sp"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:paddingLeft="30dp"
             android:paddingTop="15dp"
+            android:textSize="25sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/lastname"
-            android:textSize="25sp"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:paddingLeft="10dp"
-            android:textStyle="bold"
-            android:paddingTop="15dp">
+            android:paddingTop="15dp"
+            android:textSize="25sp"
+            android:textStyle="bold">
 
         </TextView>
 

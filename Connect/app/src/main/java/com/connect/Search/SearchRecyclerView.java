@@ -9,14 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.connect.Comments.models.CommentLinear;
+import com.connect.Home.HomeActivity;
 import com.connect.Profile.UserProfileActivity;
-import com.connect.Search.model.Search;
 import com.connect.Search.model.SearchLinear;
 import com.connect.main.R;
 import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
@@ -34,7 +32,7 @@ import java.util.HashMap;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.SearchViewHolder> {
+public class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.SearchViewHolder> {
 
 
     private static final String TAG = "SearchRecyclerView";
@@ -86,14 +84,23 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.SearchV
             //com.connect.NewsFeed.NewsFeedFragment newsFeedFragment = new com.connect.NewsFeed.NewsFeedFragment();
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
+
                 @Override
                 public void onClick(View v) {
-                    Log.d(TAG, "onClick: profile clicked");
-                    Intent intent = new Intent(mContext, UserProfileActivity.class);
-                    intent.putExtra("id",card.getAuthor_id());
-                    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
-                    //startActivity(intent);
-                    mContext.startActivity(intent);
+
+                    if(HomeActivity.getId().equals(card.getAuthor_id())){
+
+                        Log.d(TAG, "Same User clicked");
+
+                    }
+                    else {
+                        Log.d(TAG, "onClick: profile clicked");
+                        Intent intent = new Intent(mContext, UserProfileActivity.class);
+                        intent.putExtra("id", card.getAuthor_id());
+                        //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
+                        //startActivity(intent);
+                        mContext.startActivity(intent);
+                    }
 
                 }
             });
@@ -139,7 +146,7 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.SearchV
         return list.size();
     }
 
-    class SearchViewHolder extends RecyclerView.ViewHolder{
+    public class SearchViewHolder extends RecyclerView.ViewHolder{
 
         TextView firstname, lastname;
         CircleImageView profile_photo_search;
@@ -176,6 +183,16 @@ class SearchRecyclerView extends RecyclerView.Adapter<SearchRecyclerView.SearchV
         // END - UNIVERSAL IMAGE LOADER SETUP
     }
 
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
 
+    @Override
+    public int getItemViewType(int position) {
+
+        return position;
+
+    }
 
 }

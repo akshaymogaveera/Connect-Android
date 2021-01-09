@@ -2,13 +2,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="60dp"
         android:background="@drawable/white_grey_border_bottom">
 
         <androidx.appcompat.widget.Toolbar
+            android:id="@+id/searchToolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/searchToolbar">
+            android:layout_height="wrap_content">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -19,12 +19,12 @@
                     android:id="@+id/searchText"
                     android:layout_width="200dp"
                     android:layout_height="match_parent"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignParentRight="true"
                     android:layout_alignParentBottom="true"
-                    android:layout_marginEnd="162dp"
-                    android:layout_marginRight="162dp"
-                    android:layout_marginBottom="-1dp"
+                    android:layout_marginEnd="27dp"
+                    android:layout_marginRight="27dp"
+                    android:layout_marginBottom="0dp"
+                    android:layout_toStartOf="@+id/searchButtonTop"
+                    android:layout_toLeftOf="@+id/searchButtonTop"
                     android:drawableLeft="@android:drawable/ic_menu_search"
                     android:hint="Enter Name"
                     android:padding="2dp"
@@ -36,12 +36,12 @@
                     android:id="@+id/searchButtonTop"
                     android:layout_width="77dp"
                     android:layout_height="40dp"
+                    android:layout_alignParentTop="true"
                     android:layout_alignParentEnd="true"
                     android:layout_alignParentRight="true"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginEnd="68dp"
-                    android:layout_marginRight="68dp"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="56dp"
+                    android:layout_marginRight="56dp"
                     android:background="@drawable/search_button"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"

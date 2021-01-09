@@ -1,21 +1,24 @@
 package com.connect.Home;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.viewpager.widget.ViewPager;
-
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.connect.Auth.LogoutActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
+
+import com.connect.Auth.LoginActivity;
 import com.connect.NewsFeed.NewsFeedFragment;
+import com.connect.Notifications.NotificationActivity;
 import com.connect.Post.CreatePostActivity;
 import com.connect.Profile.ProfileActivity;
 import com.connect.Search.SearchActivity;
-import com.connect.UserProfileEdit.EditProfileFragment;
 import com.connect.main.R;
 import com.connect.main.SectionsPageAdapter;
 import com.connect.main.UniversalImageLoader;
@@ -24,13 +27,18 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private Context mContext = HomeActivity.this;
+    private static Context mContext;
+    //private Context mContext = HomeActivity.this;
     private ViewPager mViewPager;
+    static SharedPreferences sharedpreferences;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        mContext = this;
 
 //        Button btn = findViewById(R.id.logout);
 //        btn.setOnClickListener(new View.OnClickListener() {
@@ -46,14 +54,40 @@ public class HomeActivity extends AppCompatActivity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         setupViewPager(mViewPager);
+        sharedpreferences = getSharedPreferences("myKey",MODE_PRIVATE);
 
         BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottomNavView_Bar);
         //BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
         Menu menu = bottomNavigationView.getMenu();
         MenuItem menuItem = menu.getItem(1);
         menuItem.setChecked(true);
-
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.hometoolbar);
         initImageLoader();
+
+
+
+        toolbar.setOnMenuItemClickListener(new androidx.appcompat.widget.Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch(item.getItemId()){
+                    case R.id.logout_home:
+                        SharedPreferences sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedpreferences.edit();
+                        editor.remove("access");
+                        editor.remove("id");
+                        editor.commit();
+                        Intent intent1 = new Intent(HomeActivity.this, LoginActivity.class);
+                        startActivity(intent1);
+                        finish();
+                        break;
+                    // TODO: Other cases
+                }
+                return true;
+            }
+        });
+
+
+
 
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -85,12 +119,12 @@ public class HomeActivity extends AppCompatActivity {
 //                        break;
 //
                     case R.id.ic_backup:
-                        Intent logout = new Intent(HomeActivity.this, LogoutActivity.class);
-                        startActivity(logout);
+//                        Intent logout = new Intent(HomeActivity.this, LogoutActivity.class);
+//                        startActivity(logout);
+                        Intent noti = new Intent(HomeActivity.this, NotificationActivity.class);
+                        startActivity(noti);
                         return true;
-//                        Intent intent4 = new Intent(MainActivity.this, ActivityFour.class);
-//                        startActivity(intent4);
-//                        break;
+
                 }
 
 
@@ -110,4 +144,15 @@ public class HomeActivity extends AppCompatActivity {
         adapter.addFragment(new NewsFeedFragment());
         viewPager.setAdapter(adapter);
     }
+
+    public static Context getContext(){
+        return mContext;
+    }
+
+    public static String getId(){
+        return sharedpreferences.getString("id", null);
+    }
+
+
+
 }

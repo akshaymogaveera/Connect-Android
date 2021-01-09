@@ -1,12 +1,6 @@
 package com.connect.Profile;
 
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -18,18 +12,23 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.connect.Comments.CommentsApi;
-import com.connect.Comments.models.CommentLinear;
 import com.connect.Friends.FriendsApi;
+import com.connect.Friends.FriendsListActivity;
 import com.connect.NewsFeed.Card;
 import com.connect.NewsFeed.NewsFeedApi;
 import com.connect.NewsFeed.NewsFeedFragment;
 import com.connect.NewsFeed.NewsFeedRecyclerView;
 import com.connect.NewsFeed.model.Feed;
 import com.connect.Post.PostApi;
-import com.connect.UserProfileEdit.EditProfileFragment;
 import com.connect.UserProfileEdit.UserProfileAPI;
 import com.connect.UserProfileEdit.models.UserProfile;
 import com.connect.main.R;
@@ -39,6 +38,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -64,9 +64,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "UserProfileActivity";
     AlertDialog.Builder builder;
     static Button friendStatus;
-    TextView countPosts, countFriends, mDisplayName, mUsername;
-    String BASE_URL = "http://192.168.42.206:8000/firstapp/";
-    public static String Url = "http://192.168.42.206:8000";
+    TextView countPosts, countFriends, mDisplayName, mUsername,location, mutuals;
+    String BASE_URL;
     private CircleImageView mProfilePhoto;
     SharedPreferences sharedpreferences;
     ArrayList<Card> list;
@@ -79,6 +78,9 @@ public class UserProfileActivity extends AppCompatActivity {
     String countLikes, countComments, id;
     private Context mContext = UserProfileActivity.this;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    int page=1;
+    HashSet<Integer> pageSet = new HashSet<>();
+    LinearLayoutManager linearLayoutManager;
 
 
 
@@ -87,6 +89,8 @@ public class UserProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_other_user_profile);
 
+        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
         countPosts = findViewById(R.id.countPosts);
         countFriends = findViewById(R.id.countFollowers);
@@ -94,6 +98,8 @@ public class UserProfileActivity extends AppCompatActivity {
         mDisplayName = findViewById(R.id.display_name);
         mUsername =  findViewById(R.id.profileName);
         friendStatus =  findViewById(R.id.friendStatus);
+        location =  findViewById(R.id.location);
+        mutuals =  findViewById(R.id.mutuals);
 
         mListView = (RecyclerView) findViewById(R.id.listView);
         mSwipeRefreshLayout = findViewById(R.id.swiperefresh_newsfeed);
@@ -110,6 +116,7 @@ public class UserProfileActivity extends AppCompatActivity {
         getPostsCount();
         getFriendsCount();
         getProfileData();
+        getMutualFriendsCount();
 
         friendStatus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,7 +132,66 @@ public class UserProfileActivity extends AppCompatActivity {
                     addFriendCall(mContext, id, true);
                 }
 
+            }
+        });
 
+        countFriends.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: navigating to EditProfileActivity");
+                Intent intent1 = new Intent(UserProfileActivity.this, FriendsListActivity.class);
+                intent1.putExtra("id", id);
+                intent1.putExtra("action", "friendList");
+                startActivity(intent1);
+                //finish();
+            }
+        });
+
+        mutuals.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: navigating to EditProfileActivity");
+                Intent intent1 = new Intent(UserProfileActivity.this, FriendsListActivity.class);
+                intent1.putExtra("id", id);
+                intent1.putExtra("action", "mutualfriendsList");
+                startActivity(intent1);
+                //finish();
+            }
+        });
+
+        final boolean[] loading = {true};
+        final int[] pastVisiblesItems = new int[1];
+        final int[] visibleItemCount = new int[1];
+        final int[] totalItemCount = new int[1];
+
+        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) { //check for scroll down
+                    visibleItemCount[0] = linearLayoutManager.getChildCount();
+                    totalItemCount[0] = linearLayoutManager.getItemCount();
+                    pastVisiblesItems[0] = linearLayoutManager.findFirstVisibleItemPosition();
+
+                    if (loading[0]) {
+                        if ((visibleItemCount[0] + pastVisiblesItems[0]) >= totalItemCount[0]) {
+                            loading[0] = false;
+                            Log.v("...", "Last Item Wow !");
+                            Log.v("...", "Visible "+visibleItemCount[0]);
+                            Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
+                            Log.v("...", "totalItemCount "+totalItemCount[0]);
+                            // Do pagination.. i.e. fetch new data
+                            page = (totalItemCount[0]/2)+1;
+                            Log.v("...", "Page "+page);
+
+                            if(!pageSet.contains(page)){
+                                pageSet.add(page);
+                                executeObservables(page);
+                            }
+
+                            loading[0] = true;
+                        }
+                    }
+                }
             }
         });
 
@@ -140,7 +206,10 @@ public class UserProfileActivity extends AppCompatActivity {
                 getPostsCount();
                 getFriendsCount();
                 getProfileData();
-                executeObservables();
+                pageSet.clear();
+                executeObservables(1);
+                pageSet.add(1);
+                getMutualFriendsCount();
                 mSwipeRefreshLayout.setRefreshing(false);
                 //adapter.notifyDataSetChanged();
             }
@@ -149,7 +218,8 @@ public class UserProfileActivity extends AppCompatActivity {
 
         });
 
-        executeObservables();
+        executeObservables(1);
+        pageSet.add(1);
     }
 
     private void dialogboxToDeleteFriends(String msg) {
@@ -278,7 +348,7 @@ public class UserProfileActivity extends AppCompatActivity {
     public void getProfileData(){
 
         Retrofit userProfile = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(BASE_URL+"/firstapp/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -299,9 +369,10 @@ public class UserProfileActivity extends AppCompatActivity {
 
                 mUsername.setText(response.body().getInfo().getUser().getUsername());
                 mUsername.setEnabled(false);
+                location.setText(response.body().getInfo().getCity());
                 mDisplayName.setText(response.body().getInfo().getUser().getFirstName()+" "+response.body().getInfo().getUser().getLastName());
                 mDisplayName.setEnabled(false);
-                UniversalImageLoader.setImage(Url+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
+                UniversalImageLoader.setImage(BASE_URL+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
                 System.out.println(response.body().getSelf());
                 System.out.println(response.body().getInfo().getUser().getFirstName());
                 //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
@@ -318,9 +389,58 @@ public class UserProfileActivity extends AppCompatActivity {
 
     }
 
-    private void executeObservables(){
 
-        getPostsObservable()
+    private void getMutualFriendsCount(){
+
+        FriendsApi friendsApi = FriendsApi.getRequestApi();
+        HashMap<String, String> headerMap = new HashMap<String, String>();
+        headerMap.put("Authorization", "Bearer "+ NewsFeedFragment.sharedpreferences.getString("accessToken", null));
+
+        HashMap<String, String> body = new HashMap<String, String>();
+        body.put("id",id);
+
+        Call<ResponseBody> call = friendsApi.getMutualFriends(body, headerMap);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.d(TAG, "onResponse: Server Response: " + response.toString());
+
+                String responseCode = String.valueOf(response.code());
+                Log.d(TAG, "onResponse: json: " + responseCode);
+                if (responseCode.contentEquals("200")) {
+
+                    try {
+
+                        Log.d(TAG, "Mutual Friends Count fetched " + responseCode);
+                        JSONObject data = new JSONObject(response.body().string());
+                        String count = data.getString("count");
+                        mutuals.setText(count+" Mutual Friends");
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+                } else {
+                    Log.d(TAG, "Mutual Friends Count Not fetched " + responseCode);
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "onFailure: Something went wrong: " + t.getMessage());
+
+            }
+        });
+
+
+    }
+
+    private void executeObservables(int page){
+
+        getPostsObservable(page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<Feed, ObservableSource<Feed>>() {
@@ -376,17 +496,13 @@ public class UserProfileActivity extends AppCompatActivity {
 
     }
 
-    private Observable<Feed> getPostsObservable(){
+    private Observable<Feed> getPostsObservable(int page){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
         headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
 
         return NewsFeedApi.getRequestApi()
-                .getUserFeed(new HashMap<String, String>()
-                {{
-                    put("id", id);
-
-                }},headerMap)
+                .getUserFeed(headerMap, Integer.parseInt(id),page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<List<Feed>, ObservableSource<Feed>>() {
@@ -396,15 +512,20 @@ public class UserProfileActivity extends AppCompatActivity {
                         for (Feed f: posts) {
                             System.out.println(f.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(f.getAuthor().getId(), f.getId(), "http://192.168.42.206:8000"+f.getPost_pics(),f.getAuthor().getUsername(), countLikes, countComments, liked, f.getText(), "drawable://" + R.drawable.connect);
+                            Card temp = new Card(f.getAuthor().getId(), f.getId(), BASE_URL+f.getPost_pics(),f.getAuthor().getUsername(), countLikes, countComments, liked, f.getText(), "drawable://" + R.drawable.connect);
                             mapping.put(f.getId(),temp);
                             list.add(temp);
                         }
 
-                        //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                        adapter = new NewsFeedRecyclerView(mContext, R.layout.card_layout_main, list , mapping);
-                        mListView.setAdapter(adapter);
-                        mListView.setLayoutManager(new LinearLayoutManager(mContext));
+                        if (page == 1) {
+                            //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
+                            adapter = new NewsFeedRecyclerView(mContext, R.layout.card_layout_main, list, mapping);
+                            mListView.setAdapter(adapter);
+                            linearLayoutManager = new LinearLayoutManager(mContext);
+                            mListView.setLayoutManager(linearLayoutManager);
+                        }else {
+                            adapter.notifyDataSetChanged();
+                        }
 
                         //adapter.setPosts(posts);
                         System.out.println(posts.get(0).getAuthor()+"---------");
@@ -562,7 +683,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                         Card temp = mapping.get(post.getId());
                         int pos = list.indexOf(temp);
-                        temp.setProfileImgUrl("http://192.168.42.206:8000"+profile_pic);
+                        temp.setProfileImgUrl(BASE_URL+profile_pic);
                         mapping.replace(post.getId(),temp);
                         list.set(pos,temp);
 

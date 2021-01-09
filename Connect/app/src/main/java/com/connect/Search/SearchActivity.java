@@ -1,13 +1,7 @@
 package com.connect.Search;
 
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,10 +10,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
-import com.connect.Auth.LoginActivity;
-import com.connect.Auth.LogoutActivity;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.connect.Comments.CommentsApi;
 import com.connect.Search.model.Search;
 import com.connect.Search.model.SearchLinear;
@@ -29,6 +25,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -53,11 +50,17 @@ public class SearchActivity extends AppCompatActivity {
     private Context mContext;
     EditText searchText;
     Button searchButton;
+    String BASE_URL;
+    int page=1;
+    HashSet<Integer> pageSet = new HashSet<>();
+    LinearLayoutManager linearLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
 
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
 
@@ -89,10 +92,59 @@ public class SearchActivity extends AppCompatActivity {
                 else{
                     list.clear();
                     mapping.clear();
-                    executeSearch(input);
+                    executeSearch(input, 1);
+                    pageSet.add(1);
 
                 }
 
+            }
+        });
+
+        final boolean[] loading = {true};
+        final int[] pastVisiblesItems = new int[1];
+        final int[] visibleItemCount = new int[1];
+        final int[] totalItemCount = new int[1];
+
+        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) { //check for scroll down
+                    visibleItemCount[0] = linearLayoutManager.getChildCount();
+                    totalItemCount[0] = linearLayoutManager.getItemCount();
+                    pastVisiblesItems[0] = linearLayoutManager.findFirstVisibleItemPosition();
+
+                    if (loading[0]) {
+                        if ((visibleItemCount[0] + pastVisiblesItems[0]) >= totalItemCount[0]) {
+                            loading[0] = false;
+                            Log.v("...", "Last Item Wow !");
+                            Log.v("...", "Visible "+visibleItemCount[0]);
+                            Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
+                            Log.v("...", "totalItemCount "+totalItemCount[0]);
+                            // Do pagination.. i.e. fetch new data
+                            page = (totalItemCount[0]/14)+1;
+                            Log.v("...", "Page "+page);
+
+                            if(!pageSet.contains(page)){
+                                pageSet.add(page);
+
+                                String input = searchText.getText().toString();
+
+                                if (input.isEmpty() || input.length() < 2){
+
+                                    Log.d(TAG,"invalid search");
+                                    Toast.makeText(mContext, "Invalid Search", Toast.LENGTH_SHORT).show();
+
+                                }
+                                else{
+                                    executeSearch(input, page);
+
+                                }
+                            }
+
+                            loading[0] = true;
+                        }
+                    }
+                }
             }
         });
 
@@ -101,10 +153,10 @@ public class SearchActivity extends AppCompatActivity {
 
     }
 
-    private void executeSearch(String input){
+    private void executeSearch(String input, int page){
 
 
-        getSearchObservable(input)
+        getSearchObservable(input, page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<Search, ObservableSource<Search>>() {
@@ -144,23 +196,25 @@ public class SearchActivity extends AppCompatActivity {
     }
 
 
-    private Observable<Search> getSearchObservable(String input){
+    private Observable<Search> getSearchObservable(String input,int page){
 
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
         headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
 
         return SearchApi.getRequestApi()
-                .getSearch(new HashMap<String, String>()
-                {{
-                    put("input", input);
-
-                }},headerMap)
+                .getSearch(headerMap, input, page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<List<Search>, ObservableSource<Search>>() {
                     @Override
                     public ObservableSource<Search> apply(final List<Search> searches) throws Exception {
+
+                        if (searches.isEmpty()){
+
+                            Log.d(TAG,"No match found!");
+                            Toast.makeText(mContext, "No match found!", Toast.LENGTH_SHORT).show();
+                        }
 
                         for (Search search: searches) {
                             System.out.println("Search: "+search.getUsername());
@@ -170,10 +224,17 @@ public class SearchActivity extends AppCompatActivity {
                             list.add(temp);
                         }
 
-                        //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                        adapter = new SearchRecyclerView(mContext, R.layout.search_linear_view, list , mapping);
-                        mListView.setAdapter(adapter);
-                        mListView.setLayoutManager(new LinearLayoutManager(mContext));
+                        if(page == 1){
+
+                            //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
+                            adapter = new SearchRecyclerView(mContext, R.layout.search_linear_view, list , mapping);
+                            mListView.setAdapter(adapter);
+                            mListView.setLayoutManager(new LinearLayoutManager(mContext));
+
+                        }
+                        else{
+                            adapter.notifyDataSetChanged();
+                        }
 
                         //adapter.setPosts(posts);
                         //System.out.println(posts.get(0).getAuthor()+"---------");
@@ -210,7 +271,7 @@ public class SearchActivity extends AppCompatActivity {
 
                         SearchLinear temp = mapping.get(search.getId().toString());
                         int pos = list.indexOf(temp);
-                        temp.setProfile_pic("http://192.168.42.206:8000"+profile_pic);
+                        temp.setProfile_pic(BASE_URL+profile_pic);
                         mapping.replace(search.getId().toString(),temp);
                         list.set(pos,temp);
 

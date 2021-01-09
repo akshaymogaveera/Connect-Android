@@ -1,23 +1,18 @@
 package com.connect.Comments;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.connect.Comments.models.CommentLinear;
-import com.connect.NewsFeed.Card;
+import com.connect.Comments.model.CommentLinear;
 import com.connect.main.R;
 import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -100,6 +95,7 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
                 @Override
                 public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
                     //holder.dialog.setVisibility(View.GONE);
+                    Log.e(TAG, "onLoadingFailed: Something went wrong: " + failReason.toString());
                 }
                 @Override
                 public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
@@ -107,6 +103,7 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
                 }
                 @Override
                 public void onLoadingCancelled(String imageUri, View view) {
+                    Log.e(TAG, "onLoadingCancelled: Something went wrong: " );
 
                 }}
 
@@ -115,6 +112,10 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
         }catch (IllegalArgumentException e){
             System.out.println(e);
             Log.e(TAG, "getView: IllegalArgumentException: " + e.getMessage() );
+        }
+        catch (Exception e){
+            System.out.println(e);
+            Log.e(TAG, "getView: Exception: " + e.getMessage() );
         }
 
 
@@ -162,7 +163,17 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
         // END - UNIVERSAL IMAGE LOADER SETUP
     }
 
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
 
+    @Override
+    public int getItemViewType(int position) {
+
+        return position;
+
+    }
 
 
 

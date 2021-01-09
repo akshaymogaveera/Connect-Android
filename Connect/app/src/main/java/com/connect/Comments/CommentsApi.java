@@ -1,8 +1,8 @@
 package com.connect.Comments;
 
-import com.connect.Comments.models.Comments;
-import com.connect.NewsFeed.NewsFeedApi;
-import com.connect.NewsFeed.model.Feed;
+import com.connect.Comments.model.Comments;
+import com.connect.Home.HomeActivity;
+import com.connect.main.R;
 
 import java.util.List;
 import java.util.Map;
@@ -18,10 +18,13 @@ import retrofit2.http.GET;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface CommentsApi {
 
-    String BASE_URL = "http://192.168.42.206:8000/firstapp/";
+    //String BASE_URL = "http://192.168.42.206:8000/firstapp/";
+    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
 
 
     @Headers("Content-Type: application/json")
@@ -31,11 +34,19 @@ public interface CommentsApi {
             @HeaderMap Map<String, String> headers
     );
 
+//    @Headers("Content-Type: application/json")
+//    @POST("post/comments/list/")
+//    Observable<List<Comments>> getCommentsList(
+//            @Body Map<String, String> body,
+//            @HeaderMap Map<String, String> headers
+//    );
+
     @Headers("Content-Type: application/json")
-    @POST("post/comments/list/")
+    @GET("post/{id}/comments/list/")
     Observable<List<Comments>> getCommentsList(
-            @Body Map<String, String> body,
-            @HeaderMap Map<String, String> headers
+            @HeaderMap Map<String, String> headers,
+            @Path("id") int id,
+            @Query("page") int page
     );
 
     @Headers("Content-Type: application/json")
