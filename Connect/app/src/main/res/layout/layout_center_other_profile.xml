@@ -80,7 +80,7 @@
                     android:id="@+id/display_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mitch"
+                    android:text="..."
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold"/>
@@ -90,7 +90,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="Mumbai"
+                    android:text="..."
                     android:textColor="@color/black"
                     android:textSize="16sp"/>
 
@@ -99,7 +99,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="5 Mutual friends"
+                    android:text="0 Mutual friends"
                     android:textColor="@color/grey"
                     android:textSize="16sp" />
 
@@ -125,6 +125,15 @@
 
                 </GridView-->
 
+                <TextView
+                    android:background="#EAE2E2"
+                    android:id="@+id/empty_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:shadowColor="@color/cardview_dark_background"
+                    android:text="No Posts"
+                    android:visibility="gone" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/listView"

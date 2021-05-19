@@ -6,9 +6,11 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -52,19 +54,20 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
     CommentsRecyclerView adapter;
     private Context mContext;
     EditText commentContent;
-    String BASE_URL;
+    String BASE_URL, postAuthorId, postId, userId, userName;
     int page=1;
     HashSet<Integer> pageSet = new HashSet<>();
     LinearLayoutManager linearLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    androidx.appcompat.widget.Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_all_comments);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
-
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
 
         mContext = ViewAllCommentsActivity.this;
@@ -73,12 +76,15 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
 
         commentContent = (EditText) findViewById(R.id.commentText);
         mSwipeRefreshLayout = findViewById(R.id.swipeRefreshCommentsList);
-
+        toolbar = findViewById(R.id.commentToolBar);
         list = new ArrayList<>();
         mapping = new HashMap<>();
 
         Intent intent = getIntent();
-        String id = intent.getStringExtra("post_id");
+        postId = intent.getStringExtra("post_id");
+        postAuthorId = intent.getStringExtra("authorId");
+        userId = sharedpreferences.getString("id", null);
+        userName = sharedpreferences.getString("userName", null);
 
         ImageView backArrow = (ImageView) findViewById(R.id.backArrow);
         backArrow.setOnClickListener(new View.OnClickListener() {
@@ -94,9 +100,41 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "onClick: navigating Save changes");
-                addComment(id);
+                addComment(postId);
                 commentContent.setText("");
 
+            }
+        });
+
+
+        toolbar.setOnMenuItemClickListener(new androidx.appcompat.widget.Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch(item.getItemId()){
+                    case R.id.delete:
+                        int count =0;
+                        for(CommentLinear l :list){
+                            if(l.isSelected()){
+                                Log.d(TAG, "Comment --"+l.getText());
+                                deleteComment(l);
+                                l.setSelected(false);
+                                adapter.notifyDataSetChanged();
+                            }
+                            else{
+                                count++;
+                            }
+                        }
+
+
+
+                        if(count == list.size()){
+                            Toast.makeText(mContext, "No comment selected!", Toast.LENGTH_SHORT).show();
+                        }
+
+                        break;
+                    // TODO: Other cases
+                }
+                return true;
             }
         });
 
@@ -126,7 +164,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
 
                             if(!pageSet.contains(page)){
                                 pageSet.add(page);
-                                executeObservables(id, page);
+                                executeObservables(postId, page);
                             }
 
                             loading[0] = true;
@@ -144,7 +182,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
                 list.clear();
                 mapping.clear();
                 pageSet.clear();
-                executeObservables(id, 1);
+                executeObservables(postId, 1);
                 pageSet.add(1);
                 mSwipeRefreshLayout.setRefreshing(false);
                 //adapter.notifyDataSetChanged();
@@ -154,7 +192,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
 
         });
 
-        executeObservables(id,1);
+        executeObservables(postId,1);
         pageSet.add(1);
 
     }
@@ -214,7 +252,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
                         for (Comments comment: comments) {
                             System.out.println("Comment: "+comment.getAuthor().getUsername()+" | "+comment.getText()+" | "+comment.getPost());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            CommentLinear temp = new CommentLinear("drawable://" + R.drawable.arizona_dessert,comment.getAuthor().getUsername(), comment.getText(), comment.getCreatedDate());
+                            CommentLinear temp = new CommentLinear("drawable://" + R.drawable.arizona_dessert,comment.getAuthor().getUsername(), comment.getText(), comment.getCreatedDate(), comment.getId());
                             mapping.put(comment.getId().toString(),temp);
                             list.add(temp);
                         }
@@ -222,7 +260,7 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
                         if(page == 1){
 
                             //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                            adapter = new CommentsRecyclerView(mContext, R.layout.comment_linear_view, list , mapping);
+                            adapter = new CommentsRecyclerView(mContext, R.layout.comment_linear_view, list , mapping, postAuthorId, userId, userName);
                             mListView.setAdapter(adapter);
                             linearLayoutManager = new LinearLayoutManager(mContext);
                             mListView.setLayoutManager(linearLayoutManager);
@@ -315,11 +353,10 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
 
                         try {
 
-
                             Log.d(TAG, "Comment Added " + responseCode);
-                            CommentLinear temp = new CommentLinear("drawable://" + R.drawable.arizona_dessert,response.body().getAuthor().getUsername(), response.body().getText(), response.body().getCreatedDate());
+                            CommentLinear temp = new CommentLinear(BASE_URL+NewsFeedFragment.sharedpreferences.getString("profile_pic", null),response.body().getAuthor().getUsername(), response.body().getText(), response.body().getCreatedDate(), response.body().getId());
                             mapping.put(response.body().getId().toString(),temp);
-                            list.add(temp);
+                            list.add(0,temp);
                             adapter.notifyDataSetChanged();
 
                         } catch (Exception e) {
@@ -340,6 +377,61 @@ public class ViewAllCommentsActivity extends AppCompatActivity {
                 }
             });
         }
+
+    }
+
+    public void deleteComment(CommentLinear commentLinear){
+
+
+        CommentsApi commentsApi = CommentsApi.getRequestApi();
+        HashMap<String, String> headerMap = new HashMap<String, String>();
+        headerMap.put("Authorization", "Bearer " + NewsFeedFragment.sharedpreferences.getString("accessToken", null));
+        headerMap.put("Content-Type", "application/json");
+
+        HashMap<String, Integer> body = new HashMap<String, Integer>();
+        body.put("id", commentLinear.getId());
+
+        Call<Comments> call = commentsApi.deleteComment(body, headerMap);
+
+        call.enqueue(new Callback<Comments>() {
+            @Override
+            public void onResponse(Call<Comments> call, Response<Comments> response) {
+                Log.d(TAG, "onResponse: Server Response: " + response.toString());
+
+                String responseCode = String.valueOf(response.code());
+                Log.d(TAG, "onResponse: json: " + responseCode);
+                //JSONObject data = null;
+                // data = new JSONObject(json);
+                //                         //   Log.d(TAG, "onResponse: data: " + data.optString("json"));
+                if (responseCode.contentEquals("200")) {
+
+                    try {
+
+
+                        Log.d(TAG, "Comment Deleted " + responseCode);
+                        Toast.makeText(mContext, "Comment Deleted ", Toast.LENGTH_SHORT).show();
+                        list.remove(commentLinear);
+                        adapter.notifyDataSetChanged();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+                } else {
+                    Log.d(TAG, "Comment not delete " + responseCode);
+                    Toast.makeText(mContext, "Unauthorized to delete comment!", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<Comments> call, Throwable t) {
+                Log.e(TAG, "onFailure: Something went wrong: " + t.getMessage());
+
+            }
+        });
+
 
     }
 }

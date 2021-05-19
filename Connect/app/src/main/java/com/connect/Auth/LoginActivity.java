@@ -47,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, "Register button clicked");
                 Intent intent1 = new Intent(LoginActivity.this, RegisterActivity.class);
                 startActivity(intent1);
-                finish();
+                //finish();
             }
         });
 
@@ -90,6 +90,8 @@ public class LoginActivity extends AppCompatActivity {
             editor.putString("accessToken", data.get("accessToken"));
             editor.putString("refreshToken", data.get("refreshToken"));
             editor.putString("id", data.get("ID"));
+            editor.putString("userName", data.get("userName"));
+            editor.putString("profile_pic", "/media/"+data.get("profile_pic"));
             editor.commit();
             Log.d(TAG,"saved shared preference");
             Toast.makeText(mContext, "Login Successful", Toast.LENGTH_SHORT).show();

@@ -19,7 +19,8 @@ import retrofit2.http.Query;
 
 public interface SearchApi {
 
-    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    //String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    String BASE_URL="https://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+"/firstapp/";
 
 
 //    @Headers("Content-Type: application/json")

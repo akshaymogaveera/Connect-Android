@@ -74,7 +74,8 @@ public class ImageCaptureActivity extends AppCompatActivity {
     }
 
     private void selectImage(Context context) {
-        final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
+        //final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
+        final CharSequence[] options = {"Choose from Gallery", "Cancel"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Choose your profile picture").setCancelable(false);
@@ -99,6 +100,8 @@ public class ImageCaptureActivity extends AppCompatActivity {
 
                     }else{
                         verifyPermissions(Permissions.PERMISSIONS);
+                        selectImage(context);
+
                     }
 
 

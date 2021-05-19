@@ -81,6 +81,7 @@ public class UserProfileActivity extends AppCompatActivity {
     int page=1;
     HashSet<Integer> pageSet = new HashSet<>();
     LinearLayoutManager linearLayoutManager;
+    TextView emptyView;
 
 
 
@@ -89,8 +90,9 @@ public class UserProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_other_user_profile);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
-
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
+        emptyView = (TextView) findViewById(R.id.empty_view);
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
         countPosts = findViewById(R.id.countPosts);
         countFriends = findViewById(R.id.countFollowers);
@@ -512,7 +514,7 @@ public class UserProfileActivity extends AppCompatActivity {
                         for (Feed f: posts) {
                             System.out.println(f.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(f.getAuthor().getId(), f.getId(), BASE_URL+f.getPost_pics(),f.getAuthor().getUsername(), countLikes, countComments, liked, f.getText(), "drawable://" + R.drawable.connect);
+                            Card temp = new Card(f.getAuthor().getId(), f.getId(), BASE_URL+f.getPost_pics(),f.getAuthor().getUsername(), countLikes, countComments, liked, f.getText(), "drawable://" + R.drawable.connect, f.getCreated_date());
                             mapping.put(f.getId(),temp);
                             list.add(temp);
                         }
@@ -527,6 +529,10 @@ public class UserProfileActivity extends AppCompatActivity {
                             adapter.notifyDataSetChanged();
                         }
 
+                        if(list.size() == 0){
+                            mListView.setVisibility(View.GONE);
+                            emptyView.setVisibility(View.VISIBLE);
+                        }
                         //adapter.setPosts(posts);
                         System.out.println(posts.get(0).getAuthor()+"---------");
                         return Observable.fromIterable(posts)
@@ -567,7 +573,7 @@ public class UserProfileActivity extends AppCompatActivity {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -606,7 +612,7 @@ public class UserProfileActivity extends AppCompatActivity {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -649,7 +655,7 @@ public class UserProfileActivity extends AppCompatActivity {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }

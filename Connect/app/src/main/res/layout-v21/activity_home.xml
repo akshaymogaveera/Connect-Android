@@ -37,7 +37,7 @@
                         android:layout_marginLeft="0dp"
                         android:layout_weight="1"
                         android:scaleType="centerInside"
-                        app:srcCompat="@drawable/connect_text" />
+                        app:srcCompat="@drawable/connect_text1" />
 
                     <androidx.appcompat.widget.Toolbar
                         android:id="@+id/hometoolbar"

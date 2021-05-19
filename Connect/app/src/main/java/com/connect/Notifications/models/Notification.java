@@ -1,7 +1,6 @@
 package com.connect.Notifications.models;
 
 
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -20,12 +19,23 @@ public class Notification {
     @SerializedName("PostImgUrl")
     @Expose
     private String postImgUrl;
+    @SerializedName("ProfileImgUrl")
+    @Expose
+    private String profileImgUrl;
     @SerializedName("count")
     @Expose
     private Integer count;
     @SerializedName("date")
     @Expose
     private String date;
+
+    public String getProfileImgUrl() {
+        return profileImgUrl;
+    }
+
+    public void setProfileImgUrl(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
 
     public String getPostID() {
         return postID;

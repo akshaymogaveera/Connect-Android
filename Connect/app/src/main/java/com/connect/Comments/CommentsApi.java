@@ -24,7 +24,8 @@ import retrofit2.http.Query;
 public interface CommentsApi {
 
     //String BASE_URL = "http://192.168.42.206:8000/firstapp/";
-    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    //String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    String BASE_URL="https://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+"/firstapp/";
 
 
     @Headers("Content-Type: application/json")
@@ -53,6 +54,13 @@ public interface CommentsApi {
     @POST("post/comment/")
     Call<Comments> addComment(
             @Body Map<String, String> body,
+            @HeaderMap Map<String, String> headers
+    );
+
+    @Headers("Content-Type: application/json")
+    @POST("post/comment/delete/")
+    Call<Comments> deleteComment(
+            @Body Map<String, Integer> body,
             @HeaderMap Map<String, String> headers
     );
 

@@ -1,7 +1,5 @@
 package com.connect.Post;
 
-import android.content.res.Resources;
-
 import com.connect.Home.HomeActivity;
 import com.connect.main.R;
 
@@ -15,9 +13,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
-import retrofit2.http.HTTP;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
@@ -27,7 +23,8 @@ import retrofit2.http.PartMap;
 
 public interface PostApi {
 
-    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    //String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    String BASE_URL="https://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+"/firstapp/";
 
     @Multipart
     @POST("post/")

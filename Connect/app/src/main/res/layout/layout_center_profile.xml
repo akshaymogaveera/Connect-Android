@@ -21,6 +21,7 @@
 
         <!-- ********************Middle Section*************************** -->
 
+
         <RelativeLayout
             android:id="@+id/relLayout2"
             android:layout_width="match_parent"
@@ -80,7 +81,7 @@
                     android:id="@+id/display_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mitch"
+                    android:text="..."
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold"/>
@@ -90,7 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="Mumbai"
+                    android:text="..."
                     android:textColor="@color/black"
                     android:textSize="16sp"/>
 
@@ -118,8 +119,18 @@
 
                 </GridView-->
 
+                <TextView
+                    android:background="#EAE2E2"
+                    android:id="@+id/empty_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:shadowColor="@color/cardview_dark_background"
+                    android:text="No Posts"
+                    android:visibility="gone" />
 
                 <androidx.recyclerview.widget.RecyclerView
+                    android:visibility="visible"
                     android:id="@+id/listView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

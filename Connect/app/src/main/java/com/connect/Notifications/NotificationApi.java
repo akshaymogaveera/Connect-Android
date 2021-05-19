@@ -17,7 +17,8 @@ import retrofit2.http.Query;
 
 public interface NotificationApi {
 
-    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    //String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    String BASE_URL="https://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+"/firstapp/";
 
 
 //    @GET("post/latest/like/")

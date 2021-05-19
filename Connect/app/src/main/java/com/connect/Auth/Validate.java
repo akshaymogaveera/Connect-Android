@@ -64,7 +64,8 @@ public class Validate {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(client)
-                .baseUrl("http://"+mContext.getResources().getString(R.string.ip)+":8000/firstapp/basic/")
+                //.baseUrl("http://"+mContext.getResources().getString(R.string.ip)+":8000/firstapp/basic/")
+                .baseUrl("https://"+mContext.getResources().getString(R.string.ip)+"/firstapp/basic/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -97,10 +98,14 @@ public class Validate {
                         String accessToken = data.getString("access");
                         String refreshToken = data.getString("refresh");
                         String ID = data.getString("id");
+                        String userName = data.getString("userName");
+                        String profile_pic = data.getString("profile_pic");
                         Log.d(TAG,accessToken);
                         userDetails.put("accessToken",accessToken);
                         userDetails.put("refreshToken",refreshToken);
                         userDetails.put("ID",ID);
+                        userDetails.put("userName",userName);
+                        userDetails.put("profile_pic",profile_pic);
                         LoginActivity.checkData(mContext,userDetails,responseCode);
 
                     } catch (JSONException | IOException e) {

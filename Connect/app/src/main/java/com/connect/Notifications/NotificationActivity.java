@@ -1,13 +1,16 @@
 package com.connect.Notifications;
 
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -52,29 +55,37 @@ public class NotificationActivity extends AppCompatActivity {
     NotificationRecyclerView adapter;
     private Context mContext;
     EditText searchText;
+    TextView emptyView;
     Button searchButton;
-    String BASE_URL, CommentMsg, LikeMsg;
+    String BASE_URL, CommentMsg, LikeMsg, token, userId;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     HashSet<Integer> pageSetLike = new HashSet<>();
     HashSet<Integer> pageSetComment = new HashSet<>();
     HashSet<Integer> pageSetFrndReq = new HashSet<>();
     LinearLayoutManager linearLayoutManager;
-    int pageLike, pageComment, pageFrndReq=1;
+    int pageLike=1, pageComment=1, pageFrndReq=1;
+    boolean sendRequestLikes = true;
+    boolean sendRequestComments = true;
+    boolean sendRequestFrndReq = true;
+    ProgressBar progressBar;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
-
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        progressBar = findViewById(R.id.ProgressBar);
+       // BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
 
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
-
+        token = sharedpreferences.getString("accessToken", null);
+        userId = sharedpreferences.getString("id", null);
         mContext = NotificationActivity.this;
 
         mListView = (RecyclerView) findViewById(R.id.notificationsRecycleList);
-
+        emptyView = (TextView) findViewById(R.id.empty_view);
+        //emptyView.setVisibility(View.GONE);
         searchText = (EditText) findViewById(R.id.searchText);
 
         searchButton = (Button) findViewById(R.id.searchButtonTop);
@@ -90,11 +101,43 @@ public class NotificationActivity extends AppCompatActivity {
         pageSetComment.add(1);
         pageSetFrndReq.add(1);
 
+        if(list.size() < 9){
+
+            pageLike = pageLike+1;
+            pageComment = pageComment+1;
+            pageFrndReq = pageFrndReq+1;
+            Log.v("...", "TotalItem < 9 "+pageLike +" | "+pageComment+" | "+pageFrndReq);
+
+            if(!pageSetLike.contains(pageLike)){
+                pageSetLike.add(pageLike);
+                executeObservablesLikes(pageLike);
+            }
+
+            if(!pageSetComment.contains(pageComment)){
+                pageSetComment.add(pageComment);
+                executeObservablesComments(pageComment);
+            }
+
+            if(!pageSetFrndReq.contains(pageFrndReq)){
+                pageSetFrndReq.add(pageFrndReq);
+                executeObservablesFrndReq(pageFrndReq);
+            }
+
+        }
+
+
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 // Your code to make your refresh action
                 // CallYourRefreshingMethod();
+                progressBar.setVisibility(View.VISIBLE);
+                sendRequestLikes = true;
+                sendRequestComments = true;
+                sendRequestFrndReq = true;
+                pageComment = 1;
+                pageFrndReq =1;
+                pageLike =1;
                 list.clear();
                 mapping.clear();
                 pageSetLike.clear();
@@ -108,6 +151,31 @@ public class NotificationActivity extends AppCompatActivity {
                 pageSetFrndReq.add(1);
                 mSwipeRefreshLayout.setRefreshing(false);
                 //adapter.notifyDataSetChanged();
+
+                if(list.size() < 9){
+
+                    pageLike = pageLike+1;
+                    pageComment = pageComment+1;
+                    pageFrndReq = pageFrndReq+1;
+                    Log.v("...", "TotalItem < 9 "+pageLike +" | "+pageComment+" | "+pageFrndReq);
+
+                    if(!pageSetLike.contains(pageLike)){
+                        pageSetLike.add(pageLike);
+                        executeObservablesLikes(pageLike);
+                    }
+
+                    if(!pageSetComment.contains(pageComment)){
+                        pageSetComment.add(pageComment);
+                        executeObservablesComments(pageComment);
+                    }
+
+                    if(!pageSetFrndReq.contains(pageFrndReq)){
+                        pageSetFrndReq.add(pageFrndReq);
+                        executeObservablesFrndReq(pageFrndReq);
+                    }
+
+                }
+
             }
 
 
@@ -135,30 +203,68 @@ public class NotificationActivity extends AppCompatActivity {
                             Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
                             Log.v("...", "totalItemCount "+totalItemCount[0]);
                             // Do pagination.. i.e. fetch new data
-                            pageLike = (totalItemCount[0]/9)+1;
-                            pageComment = (totalItemCount[0]/9)+1;
-                            pageFrndReq = (totalItemCount[0]/9)+1;
+//                            pageLike = (totalItemCount[0]/9)+1;
+//                            pageComment = (totalItemCount[0]/9)+1;
+//                            pageFrndReq = (totalItemCount[0]/9)+1;
+                            pageLike = pageLike+1;
+                            pageComment = pageComment+1;
+                            pageFrndReq = pageFrndReq+1;
                             Log.v("...", "Page "+pageLike +" | "+pageComment+" | "+pageFrndReq);
 
-                            if(!pageSetLike.contains(pageLike)){
+                            if(!pageSetLike.contains(pageLike) && sendRequestLikes){
                                 pageSetLike.add(pageLike);
                                 executeObservablesLikes(pageLike);
                             }
 
-                            if(!pageSetComment.contains(pageComment)){
+                            if(!pageSetComment.contains(pageComment) && sendRequestComments){
                                 pageSetComment.add(pageComment);
                                 executeObservablesComments(pageComment);
                             }
 
-                            if(!pageSetFrndReq.contains(pageFrndReq)){
+                            if(!pageSetFrndReq.contains(pageFrndReq) && sendRequestFrndReq){
                                 pageSetFrndReq.add(pageFrndReq);
                                 executeObservablesFrndReq(pageFrndReq);
                             }
 
                             loading[0] = true;
                         }
+
                     }
+
+//                    if(totalItemCount[0] < 9){
+//
+//                        pageLike = pageLike+1;
+//                        pageComment = pageComment+1;
+//                        pageFrndReq = pageFrndReq+1;
+//                        Log.v("...", "TotalItem < 9 "+pageLike +" | "+pageComment+" | "+pageFrndReq);
+//
+//                        if(!pageSetLike.contains(pageLike)){
+//                            pageSetLike.add(pageLike);
+//                            executeObservablesLikes(pageLike);
+//                        }
+//
+//                        if(!pageSetComment.contains(pageComment)){
+//                            pageSetComment.add(pageComment);
+//                            executeObservablesComments(pageComment);
+//                        }
+//
+//                        if(!pageSetFrndReq.contains(pageFrndReq)){
+//                            pageSetFrndReq.add(pageFrndReq);
+//                            executeObservablesFrndReq(pageFrndReq);
+//                        }
+//
+//                    }
                 }
+            }
+        });
+
+
+        ImageView backArrow = (ImageView) findViewById(R.id.backArrow);
+        backArrow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: navigating back to Home Activity");
+                finish();
             }
         });
 
@@ -169,14 +275,14 @@ public class NotificationActivity extends AppCompatActivity {
         getLikesNotifications(likePage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Function<Notification, ObservableSource<Notification>>() {
-                    @Override
-                    public ObservableSource<Notification> apply(Notification notification) throws Exception {
-                        return getProfilePicObservable(notification);
-
-
-                    }
-                })
+//                .flatMap(new Function<Notification, ObservableSource<Notification>>() {
+//                    @Override
+//                    public ObservableSource<Notification> apply(Notification notification) throws Exception {
+//                        return getProfilePicObservable(notification);
+//
+//
+//                    }
+//                })
                 .debounce(400, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Notification>() {
@@ -193,6 +299,7 @@ public class NotificationActivity extends AppCompatActivity {
                     @Override
                     public void onError(Throwable e) {
                         Log.e(TAG, "onError: ", e);
+                        sendRequestLikes = false;
                     }
 
                     @Override
@@ -208,14 +315,14 @@ public class NotificationActivity extends AppCompatActivity {
         getCommentsNotifications(commentPage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Function<Notification, ObservableSource<Notification>>() {
-                    @Override
-                    public ObservableSource<Notification> apply(Notification notification) throws Exception {
-                        return getProfilePicObservable(notification);
-
-
-                    }
-                })
+//                .flatMap(new Function<Notification, ObservableSource<Notification>>() {
+//                    @Override
+//                    public ObservableSource<Notification> apply(Notification notification) throws Exception {
+//                        return getProfilePicObservable(notification);
+//
+//
+//                    }
+//                })
                 .debounce(400, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Notification>() {
@@ -232,6 +339,7 @@ public class NotificationActivity extends AppCompatActivity {
                     @Override
                     public void onError(Throwable e) {
                         Log.e(TAG, "onError: ", e);
+                        sendRequestComments = false;
                     }
 
                     @Override
@@ -271,6 +379,7 @@ public class NotificationActivity extends AppCompatActivity {
                     @Override
                     public void onError(Throwable e) {
                         Log.e(TAG, "onError: ", e);
+                        sendRequestFrndReq = false;
                     }
 
                     @Override
@@ -283,7 +392,7 @@ public class NotificationActivity extends AppCompatActivity {
     private Observable<Notification> getLikesNotifications(int likePage){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
 
         return NotificationApi.getRequestApi()
                 .getLikesNotifications(headerMap, likePage)
@@ -292,6 +401,8 @@ public class NotificationActivity extends AppCompatActivity {
                 .flatMap(new Function<List<Notification>, ObservableSource<Notification>>() {
                     @Override
                     public ObservableSource<Notification> apply(final List<Notification> likesN) throws Exception {
+
+                        progressBar.setVisibility(View.GONE);
 
                         for (Notification likeN: likesN) {
 
@@ -303,9 +414,14 @@ public class NotificationActivity extends AppCompatActivity {
                                 LikeMsg = likeN.getPersonUsername()+" and "+likeN.getCount().toString()+" others liked your pic";
                             }
 
-                            NotificationsLinear temp = new NotificationsLinear(likeN.getPostID().toString(),likeN.getPersonID().toString(),likeN.getPersonUsername(),likeN.getCount().toString(),LikeMsg,BASE_URL+"/media/"+likeN.getPostImgUrl(),BASE_URL+"/media/"+likeN.getPostImgUrl(),new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(likeN.getDate()));
-                           // mapping.put(likeN.getPostID().toString(),temp);
-                            list.add(temp);
+                            if(!mapping.containsKey(likeN.getPostID())){
+
+                                NotificationsLinear temp = new NotificationsLinear(likeN.getPostID(),likeN.getPersonID().toString(),likeN.getPersonUsername(),likeN.getCount().toString(),LikeMsg,BASE_URL+"/media/"+likeN.getPostImgUrl(),BASE_URL+"/media/"+likeN.getProfileImgUrl(),new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(likeN.getDate()));
+                                // mapping.put(likeN.getPostID().toString(),temp);
+                                list.add(temp);
+
+                            }
+
                         }
 
                         Collections.sort(list, Collections.reverseOrder());
@@ -318,7 +434,7 @@ public class NotificationActivity extends AppCompatActivity {
                         }
                         if(likePage == 1){
                             //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
-                            adapter = new NotificationRecyclerView(mContext, R.layout.notification_linear_view, list, mapping);
+                            adapter = new NotificationRecyclerView(mContext, R.layout.notification_linear_view, list, mapping, userId);
                             mListView.setAdapter(adapter);
                             linearLayoutManager = new LinearLayoutManager(mContext);
                             mListView.setLayoutManager(linearLayoutManager);
@@ -326,6 +442,11 @@ public class NotificationActivity extends AppCompatActivity {
                         }
                         else{
                             adapter.notifyDataSetChanged();
+                        }
+
+                        if(list.size() > 0){
+                            mListView.setVisibility(View.VISIBLE);
+                            emptyView.setVisibility(View.GONE);
                         }
 
                         //adapter.setPosts(posts);
@@ -339,7 +460,7 @@ public class NotificationActivity extends AppCompatActivity {
     private Observable<Notification> getCommentsNotifications(int commentPage){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
 
         return NotificationApi.getRequestApi()
                 .getCommentsNotifications(headerMap,commentPage)
@@ -348,6 +469,8 @@ public class NotificationActivity extends AppCompatActivity {
                 .flatMap(new Function<List<Notification>, ObservableSource<Notification>>() {
                     @Override
                     public ObservableSource<Notification> apply(final List<Notification> likesN) throws Exception {
+
+                        progressBar.setVisibility(View.GONE);
 
                         for (Notification likeN: likesN) {
 
@@ -368,9 +491,12 @@ public class NotificationActivity extends AppCompatActivity {
                             else
                                 date = likeN.getDate();
                             //String date = datelist[0]+datelist[1];
-                            NotificationsLinear temp = new NotificationsLinear(likeN.getPostID().toString(),likeN.getPersonID().toString(),likeN.getPersonUsername(),likeN.getCount().toString(), CommentMsg,BASE_URL+"/media/"+likeN.getPostImgUrl(),BASE_URL+"/media/"+likeN.getPostImgUrl(),new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(date));
-                            //mapping.put(likeN.getPostID().toString(),temp);
-                            list.add(temp);
+
+                            if(!mapping.containsKey(likeN.getPostID())) {
+                                NotificationsLinear temp = new NotificationsLinear(likeN.getPostID(), likeN.getPersonID().toString(), likeN.getPersonUsername(), likeN.getCount().toString(), CommentMsg, BASE_URL + "/media/" + likeN.getPostImgUrl(), BASE_URL + "/media/" + likeN.getProfileImgUrl(), new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(date));
+                                //mapping.put(likeN.getPostID().toString(),temp);
+                                list.add(temp);
+                            }
                         }
 
                         //adapter = new CustomListAdapter(NewsFeedActivity.this, R.layout.card_layout_main, list);
@@ -387,6 +513,10 @@ public class NotificationActivity extends AppCompatActivity {
                         //mListView.setAdapter(adapter);
                         //mListView.setLayoutManager(new LinearLayoutManager(mContext));
 
+                        if(list.size() > 0){
+                            mListView.setVisibility(View.VISIBLE);
+                            emptyView.setVisibility(View.GONE);
+                        }
                         //adapter.setPosts(posts);
                         System.out.println("Commmnet called +++++++++++++++");
                         return Observable.fromIterable(likesN)
@@ -400,7 +530,7 @@ public class NotificationActivity extends AppCompatActivity {
     public Observable<Notification> getProfilePicObservable(final Notification NotificationLike){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
         HashMap<String, String> body = new HashMap<String, String>();
 
         return CommentsApi.getRequestApi()
@@ -427,8 +557,9 @@ public class NotificationActivity extends AppCompatActivity {
                         mapping.replace(NotificationLike.getPostID().toString(),temp);
                         list.set(pos,temp);
 
-                        //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        adapter.notifyDataSetChanged();
+                        //adapter.notify();
+                        //adapter.notifyItemChanged(pos);
 
                         return NotificationLike;
                     }
@@ -439,7 +570,7 @@ public class NotificationActivity extends AppCompatActivity {
     public Observable<Friend> getFriendProfilePicObservable(final Friend friend){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
         HashMap<String, String> body = new HashMap<String, String>();
 
         return CommentsApi.getRequestApi()
@@ -466,8 +597,9 @@ public class NotificationActivity extends AppCompatActivity {
                         mapping.replace(friend.getId().toString(),temp);
                         list.set(pos,temp);
 
-                        //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        adapter.notifyDataSetChanged();
+                        //adapter.notifyItemChanged(pos);
+
 
                         return friend;
                     }
@@ -480,7 +612,7 @@ public class NotificationActivity extends AppCompatActivity {
     private Observable<Friend> getFriendRequestList(int frndReqPage){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
 
         return FriendsApi.getRequestApi()
                 .getFriendRequestList(headerMap, frndReqPage)
@@ -489,6 +621,8 @@ public class NotificationActivity extends AppCompatActivity {
                 .flatMap(new Function<List<Friend>, ObservableSource<Friend>>() {
                     @Override
                     public ObservableSource<Friend> apply(final List<Friend> friends) throws Exception {
+
+                        progressBar.setVisibility(View.GONE);
 
                         for (Friend friend: friends) {
 
@@ -517,7 +651,7 @@ public class NotificationActivity extends AppCompatActivity {
                         }
 
                         if(frndReqPage == 1){
-                            adapter = new NotificationRecyclerView(mContext, R.layout.notification_linear_view, list, mapping);
+                            adapter = new NotificationRecyclerView(mContext, R.layout.notification_linear_view, list, mapping, userId);
                             mListView.setAdapter(adapter);
                             linearLayoutManager = new LinearLayoutManager(mContext);
                             mListView.setLayoutManager(linearLayoutManager);
@@ -525,6 +659,15 @@ public class NotificationActivity extends AppCompatActivity {
                         }
                         else{
                             adapter.notifyDataSetChanged();
+                        }
+
+                        if(list.size() == 0){
+                            mListView.setVisibility(View.GONE);
+                            emptyView.setVisibility(View.VISIBLE);
+                        }
+                        else{
+                            mListView.setVisibility(View.VISIBLE);
+                            emptyView.setVisibility(View.GONE);
                         }
 
 

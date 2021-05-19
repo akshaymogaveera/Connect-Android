@@ -60,7 +60,8 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
 
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
 

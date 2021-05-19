@@ -10,8 +10,9 @@ public class Card {
     private boolean liked;
     private String caption;
     private String profileImgUrl;
+    private String createdDate;
 
-    public Card(String authorid, String id, String imgURL, String title, String countLikes, String countComments, boolean liked, String caption, String profileImgUrl) {
+    public Card(String authorid, String id, String imgURL, String title, String countLikes, String countComments, boolean liked, String caption, String profileImgUrl, String createdDate) {
         this.authorid = authorid;
         this.id = id;
         this.imgURL = imgURL;
@@ -21,6 +22,15 @@ public class Card {
         this.liked = liked;
         this.caption = caption;
         this.profileImgUrl = profileImgUrl;
+        this.createdDate = createdDate;
+    }
+
+    public String getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(String createdDate) {
+        this.createdDate = createdDate;
     }
 
     public String getAuthorid() {

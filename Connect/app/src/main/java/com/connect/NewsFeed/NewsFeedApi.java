@@ -24,7 +24,8 @@ import retrofit2.http.Query;
 public interface NewsFeedApi {
 
     //String BASE_URL = "http://192.168.42.206:8000/firstapp/";
-    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    //String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    String BASE_URL="https://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+"/firstapp/";
 //
 //    int cacheSize = 10 * 1024 * 1024;
 //    Cache cache = Validate.cache;

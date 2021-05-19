@@ -2,10 +2,12 @@ package com.connect.Comments;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -14,17 +16,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.connect.Comments.model.CommentLinear;
 import com.connect.main.R;
-import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
+import org.ocpsoft.prettytime.PrettyTime;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -39,14 +42,20 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
     private ArrayList<CommentLinear> list;
     private HashMap<String, CommentLinear> mapping;
     private int lastPosition = -1;
+    private String postAuthorId, userId, userName;
+    
 
-    public CommentsRecyclerView(Context mContext, int resource, ArrayList<CommentLinear> list, HashMap<String, CommentLinear> mapping) {
+    public CommentsRecyclerView(Context mContext, int resource, ArrayList<CommentLinear> list, HashMap<String, CommentLinear> mapping,String postAuthorId, String userId, String userName) {
         this.mContext = mContext;
         this.mResource = resource;
         this.list = list;
         this.mapping = mapping;
+        this.postAuthorId = postAuthorId;
+        this.userId = userId;
+        this.userName = userName;
 
-        setupImageLoader();
+        com.connect.Utils.ImageLoader imageLoader = new com.connect.Utils.ImageLoader();
+        imageLoader.setupImageLoader(mContext);
     }
 
     @NonNull
@@ -61,8 +70,21 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
     public void onBindViewHolder(@NonNull CommentsListViewHolder holder, int position) {
 
         CommentLinear card = list.get(position);
-
         try{
+
+            holder.linearLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    if(postAuthorId.equals(userId) || userName.equals(card.getAuthor()) ) {
+                        card.setSelected(!card.isSelected());
+                        v.setBackgroundColor(card.isSelected() ? Color.CYAN : Color.WHITE);
+                    }
+                    else{
+                        Log.e(TAG, "Cannot select comment, post or comment doesn't belong to user " );
+                    }
+                }
+            });
 
             lastPosition = position;
 
@@ -78,6 +100,28 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
             //com.connect.NewsFeed.NewsFeedFragment newsFeedFragment = new com.connect.NewsFeed.NewsFeedFragment();
 
 
+
+
+            String[] datelist = card.getCreated_on().split("\\.");
+            String[] datelist1 = card.getCreated_on().split("\\+");
+            String date ="date";
+            if(datelist.length > 1) {
+                //System.out.println(datelist.length+"Count -----------"+datelist[0]);
+                date = datelist[0] + "Z";
+            }
+            else if(datelist1.length > 1){
+                date = datelist1[0] + "Z";
+            }
+            else{
+                date  = card.getCreated_on();
+            }
+
+
+
+            Date parsedDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(date);
+            PrettyTime prettyTime = new PrettyTime(Locale.getDefault());
+            String ago = prettyTime.format(parsedDate);
+            holder.timeAgo.setText(ago);
 
             //create display options
             DisplayImageOptions options = new DisplayImageOptions.Builder().cacheInMemory(true)
@@ -128,9 +172,10 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
 
     class CommentsListViewHolder extends RecyclerView.ViewHolder{
 
-        TextView commentedby, commentContent;
+        TextView commentedby, commentContent, timeAgo;
         CircleImageView mProfilePhoto;
         ProgressBar dialog;
+        LinearLayout linearLayout;
 
         public CommentsListViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -139,29 +184,12 @@ class CommentsRecyclerView extends RecyclerView.Adapter<CommentsRecyclerView.Com
             commentContent =  (TextView) itemView.findViewById(R.id.commentContent);
             mProfilePhoto = (CircleImageView) itemView.findViewById(R.id.profile_photo_comments);
             dialog = (ProgressBar) itemView.findViewById(R.id.cardProgressDialog);
+            timeAgo =  (TextView) itemView.findViewById(R.id.timeAgo);
+            linearLayout = itemView.findViewById(R.id.linearLayout2);
 
         }
     }
 
-    /**
-     * Required for setting up the Universal Image loader Library
-     */
-    private void setupImageLoader(){
-        // UNIVERSAL IMAGE LOADER SETUP
-        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
-                .cacheOnDisc(true).cacheInMemory(true)
-                .imageScaleType(ImageScaleType.EXACTLY)
-                .displayer(new FadeInBitmapDisplayer(300)).build();
-
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
-                mContext)
-                .defaultDisplayImageOptions(defaultOptions)
-                .memoryCache(new WeakMemoryCache())
-                .discCacheSize(100 * 1024 * 1024).build();
-
-        ImageLoader.getInstance().init(config);
-        // END - UNIVERSAL IMAGE LOADER SETUP
-    }
 
     @Override
     public long getItemId(int position) {

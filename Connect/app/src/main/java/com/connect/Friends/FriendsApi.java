@@ -25,7 +25,8 @@ import retrofit2.http.Query;
 public interface FriendsApi {
 
     //String BASE_URL = "http://192.168.42.206:8000/firstapp/";
-    String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    //String BASE_URL="http://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+":8000/firstapp/";
+    String BASE_URL="https://"+ HomeActivity.getContext().getResources().getString(R.string.ip)+"/firstapp/";
 
     @GET("friend/count/")
     Call<ResponseBody> getFriendsCount(

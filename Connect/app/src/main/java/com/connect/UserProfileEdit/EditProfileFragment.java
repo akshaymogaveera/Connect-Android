@@ -1,13 +1,17 @@
 package com.connect.UserProfileEdit;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -44,6 +48,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class EditProfileFragment extends AppCompatActivity {
 
+    Spinner s1,s2,s3;
     public static String BASE_URL;
     private static final String TAG = "EditProfileFragment";
     private EditText mDisplayName, mUsername, mWebsite, mDescription, mEmail, mPhoneNumber,mCity, mCountry, mSex;
@@ -52,6 +57,8 @@ public class EditProfileFragment extends AppCompatActivity {
     SharedPreferences sharedpreferences;
     String imgUrl, imgUrlOld;
     boolean profilePicChanged;
+    Context mContext;
+    int cityCount= 0;
 
 
 
@@ -61,8 +68,43 @@ public class EditProfileFragment extends AppCompatActivity {
         setContentView(R.layout.activity_user_profile);
         profilePicChanged = false;
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
+        mContext = EditProfileFragment.this;
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        s1 = findViewById(R.id.spinner_country);
+        s2 = findViewById(R.id.spinner_city);
+        s3 = findViewById(R.id.spinner_sex);
+        s1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+
+                // TODO Auto-generated method stub
+                String city[] = new String[0],sp1= String.valueOf(s1.getSelectedItem());
+                if(sp1.toLowerCase().contentEquals("india")) {
+                    city = getResources().getStringArray(R.array.city_india);
+                }
+                else if (sp1.toLowerCase().contentEquals("canada")){
+                    city = getResources().getStringArray(R.array.city_canada);
+                }
+                else if (sp1.toLowerCase().contentEquals("usa")){
+                    city = getResources().getStringArray(R.array.city_usa);
+                }
+
+                ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(mContext, android.R.layout.simple_spinner_item, city);
+                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                dataAdapter.notifyDataSetChanged();
+                s2.setAdapter(dataAdapter);
+                s2.setSelection(cityCount);
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         getProfileData();
         //back arrow for navigating back to "ProfileActivity"
@@ -111,14 +153,15 @@ public class EditProfileFragment extends AppCompatActivity {
 
     public void getProfileData(){
 
+
         mProfilePhoto = (CircleImageView) findViewById(R.id.profile_photo);
         mDisplayName = (EditText) findViewById(R.id.display_name);
         mUsername = (EditText) findViewById(R.id.username);
-        mCity = (EditText) findViewById(R.id.city);
-        mCountry = (EditText) findViewById(R.id.country);
+        //mCity = (EditText) findViewById(R.id.city);
+        //mCountry = (EditText) findViewById(R.id.country);
         mEmail = (EditText) findViewById(R.id.email);
         mPhoneNumber = (EditText) findViewById(R.id.phoneNumber);
-        mSex = (EditText) findViewById(R.id.sex);
+        //mSex = (EditText) findViewById(R.id.sex);
         mChangeProfilePhoto = (TextView) findViewById(R.id.changeProfilePhoto);
 
         Retrofit userProfile = new Retrofit.Builder()
@@ -146,10 +189,50 @@ public class EditProfileFragment extends AppCompatActivity {
                 mDisplayName.setText(response.body().getInfo().getUser().getFirstName()+" "+response.body().getInfo().getUser().getLastName());
                 mDisplayName.setEnabled(false);
                 mEmail.setText(response.body().getInfo().getUser().getEmail());
-                mCity.setText(response.body().getInfo().getCity());
-                mCountry.setText(response.body().getInfo().getCountry());
-                mSex.setText(response.body().getInfo().getSex());
-                mSex.setEnabled(false);
+                String[] countries = getResources().getStringArray(R.array.country_arrays);
+                int countryCount= 0;
+                for(String country: countries){
+                    if (country.toLowerCase().equals(response.body().getInfo().getCountry().toLowerCase())){
+                        break;
+                    }
+                    countryCount++;
+                }
+
+                s1.setSelection(countryCount);
+
+                String city[] = new String[0],sp1= String.valueOf(s1.getSelectedItem());
+                if(sp1.toLowerCase().contentEquals("india")) {
+                    city = getResources().getStringArray(R.array.city_india);
+                }
+                else if (sp1.toLowerCase().contentEquals("canada")){
+                    city = getResources().getStringArray(R.array.city_canada);
+                }
+                else if (sp1.toLowerCase().contentEquals("usa")){
+                    city = getResources().getStringArray(R.array.city_usa);
+                }
+
+
+                for(String c: city){
+                    if (c.toLowerCase().equals(response.body().getInfo().getCity().toLowerCase())){
+                        System.out.println(c+response.body().getInfo().getCity()+cityCount);
+                        break;
+                    }
+                    cityCount++;
+                }
+
+
+                s2.setSelection(cityCount, false);
+
+                if("male".equals(response.body().getInfo().getSex().toLowerCase())){
+                    s3.setSelection(0);
+                }else{
+                    s3.setSelection(1);
+                }
+                s3.setEnabled(false);
+                //mCity.setText(response.body().getInfo().getCity());
+                //mCountry.setText(response.body().getInfo().getCountry());
+                //mSex.setText(response.body().getInfo().getSex());
+                //mSex.setEnabled(false);
                 UniversalImageLoader.setImage(BASE_URL+response.body().getInfo().getProfilePic(), mProfilePhoto, null, "");
                 imgUrl = response.body().getInfo().getProfilePic();
                 System.out.println(response.body().getSelf());
@@ -171,8 +254,8 @@ public class EditProfileFragment extends AppCompatActivity {
     public void saveProfileData() throws IOException {
 
        String Email = mEmail.getText().toString();
-       String City = mCity.getText().toString();
-       String Country = mCountry.getText().toString();
+       String City = String.valueOf(s2.getSelectedItem());
+       String Country = String.valueOf(s1.getSelectedItem());
 
         Call<Info> call;
 
@@ -251,10 +334,14 @@ public class EditProfileFragment extends AppCompatActivity {
 
                     Log.d(TAG,"Email has Changed");
                     profilePicChanged=false;
-
+                    sharedpreferences = mContext.getSharedPreferences("myKey",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
                     Log.d(TAG, "onResponse: received information: " );
                     mUsername.setText(response.body().getUser().getUsername());
                     mEmail.setText(response.body().getUser().getEmail());
+                    editor.putString("profile_pic",response.body().getProfilePic());
+                    editor.commit();
+                    Log.d(TAG, "Profile Pic changes and saved locally" );
                     System.out.println(response.body());
                     AlertDialog alertDialog = new AlertDialog.Builder(EditProfileFragment.this).create();
                     alertDialog.setTitle("Success");
@@ -362,5 +449,6 @@ public class EditProfileFragment extends AppCompatActivity {
             }
         }
     }
+
 
 }

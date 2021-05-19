@@ -104,16 +104,26 @@
                     android:layout_height="35dp"
                     android:layout_centerVertical="true"/>
 
-                <EditText
+<!--                <EditText-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:id="@+id/city"-->
+<!--                    android:layout_centerVertical="true"-->
+<!--                    android:layout_marginStart="40dp"-->
+<!--                    android:background="@null"-->
+<!--                    android:inputType="textNoSuggestions"-->
+<!--                    android:hint="City"-->
+<!--                    android:layout_marginLeft="40dp" />-->
+
+                <Spinner
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginStart="40dp"
+                    android:id="@+id/spinner_country"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/city"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="40dp"
-                    android:background="@null"
-                    android:inputType="textNoSuggestions"
-                    android:hint="City"
-                    android:layout_marginLeft="40dp" />
+                    android:entries="@array/country_arrays"
+                    android:prompt="@string/country_prompt" />
 
             </RelativeLayout>
 
@@ -133,16 +143,24 @@
 
                     android:layout_centerVertical="true"/>
 
-                <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/country"
+<!--                <EditText-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:id="@+id/country"-->
+<!--                    android:layout_centerVertical="true"-->
+<!--                    android:layout_marginStart="40dp"-->
+<!--                    android:background="@null"-->
+<!--                    android:inputType="textNoSuggestions"-->
+<!--                    android:hint="Country"-->
+<!--                    android:layout_marginLeft="40dp" />-->
+
+                <Spinner
                     android:layout_centerVertical="true"
+                    android:layout_marginLeft="40dp"
                     android:layout_marginStart="40dp"
-                    android:background="@null"
-                    android:inputType="textNoSuggestions"
-                    android:hint="Country"
-                    android:layout_marginLeft="40dp" />
+                    android:id="@+id/spinner_city"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
             </RelativeLayout>
 
@@ -160,16 +178,14 @@
 
                     android:layout_centerVertical="true"/>
 
-                <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/sex"
+                <Spinner
                     android:layout_centerVertical="true"
+                    android:layout_marginLeft="40dp"
                     android:layout_marginStart="40dp"
-                    android:background="@null"
-                    android:inputType="textNoSuggestions"
-                    android:hint="Sex"
-                    android:layout_marginLeft="40dp" />
+                    android:id="@+id/spinner_sex"
+                    android:entries="@array/sex_arrays"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
             </RelativeLayout>
 

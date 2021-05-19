@@ -27,7 +27,7 @@
                     android:layout_height="45dp"
                     android:layout_marginLeft="0dp"
                     android:scaleType="centerInside"
-                    app:srcCompat="@drawable/connect_text" />
+                    app:srcCompat="@drawable/connect_text1" />
 
 
                 <com.google.android.material.tabs.TabLayout

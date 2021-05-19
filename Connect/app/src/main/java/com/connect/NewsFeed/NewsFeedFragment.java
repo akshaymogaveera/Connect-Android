@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
@@ -48,7 +50,7 @@ public class NewsFeedFragment extends Fragment {
     private static final String TAG = "NewsFeedActivity";
     private static String BASE_URL;
     public static SharedPreferences sharedpreferences;
-    String countLikes, countComments, id, profileImgUrl;
+    String countLikes, countComments, id, profileImgUrl, token;
     ArrayList<Card> list;
     HashMap<String, Card> mapping;
     boolean liked;
@@ -56,19 +58,23 @@ public class NewsFeedFragment extends Fragment {
     LinearLayoutManager linearLayoutManager;
     int page =1;
     HashSet<Integer> pageSet = new HashSet<>();
-
+    ProgressBar progressBar;
+    TextView emptyView;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_news_feed,container,false);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
-
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
+        progressBar = view.findViewById(R.id.ProgressBar);
         sharedpreferences = this.getActivity().getSharedPreferences("myKey", MODE_PRIVATE);
+        token = sharedpreferences.getString("accessToken", null);
         sharedpreferencesobs = this.getActivity().getSharedPreferences("myKey", MODE_PRIVATE);
         //mListView = (ListView) findViewById(R.id.listView);
         mListView = (RecyclerView) view.findViewById(R.id.listView);
+        emptyView = (TextView) view.findViewById(R.id.empty_view);
         mSwipeRefreshLayout = view.findViewById(R.id.swiperefresh_newsfeed);
         countLikes = "0";
         countComments = "0";
@@ -85,6 +91,7 @@ public class NewsFeedFragment extends Fragment {
             public void onRefresh() {
                 // Your code to make your refresh action
                 // CallYourRefreshingMethod();
+                progressBar.setVisibility(View.VISIBLE);
                 pageSet.clear();
                 list.clear();
                 mapping.clear();
@@ -93,9 +100,6 @@ public class NewsFeedFragment extends Fragment {
                 mSwipeRefreshLayout.setRefreshing(false);
                 //adapter.notifyDataSetChanged();
             }
-
-
-
         });
 
         final boolean[] loading = {true};
@@ -119,7 +123,7 @@ public class NewsFeedFragment extends Fragment {
                             Log.v("...", "pastVisiblesItems "+pastVisiblesItems[0]);
                             Log.v("...", "totalItemCount "+totalItemCount[0]);
                             // Do pagination.. i.e. fetch new data
-                            page = (totalItemCount[0]/2)+1;
+                            page = (totalItemCount[0]/4)+1;
                             Log.v("...", "Page "+page);
 
                             if(!pageSet.contains(page)){
@@ -203,7 +207,7 @@ public class NewsFeedFragment extends Fragment {
     private Observable<Feed> getPostsObservable(int page){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
 
         return NewsFeedApi.getRequestApi()
                 .getObsData(headerMap, page)
@@ -213,10 +217,12 @@ public class NewsFeedFragment extends Fragment {
                     @Override
                     public ObservableSource<Feed> apply(final List<Feed> posts) throws Exception {
 
+                        progressBar.setVisibility(View.GONE);
+
                         for (Feed post: posts) {
                             System.out.println(post.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(post.getAuthor().getId(), post.getId(), BASE_URL+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
+                            Card temp = new Card(post.getAuthor().getId(), post.getId(), BASE_URL+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect, post.getCreated_date());
                             mapping.put(post.getId(),temp);
                             list.add(temp);
                         }
@@ -233,6 +239,11 @@ public class NewsFeedFragment extends Fragment {
                             adapter.notifyDataSetChanged();
                         }
 
+                        if(list.size() == 0){
+                            mListView.setVisibility(View.GONE);
+                            emptyView.setVisibility(View.VISIBLE);
+                        }
+
                         //adapter.setPosts(posts);
                         System.out.println(posts.get(0).getAuthor()+"---------");
                         return Observable.fromIterable(posts)
@@ -245,7 +256,7 @@ public class NewsFeedFragment extends Fragment {
     public Observable<Feed> getLikesObservable(final Feed post){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
         HashMap<String, String> body = new HashMap<String, String>();
 
         return NewsFeedApi.getRequestApi()
@@ -273,7 +284,7 @@ public class NewsFeedFragment extends Fragment {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -284,7 +295,7 @@ public class NewsFeedFragment extends Fragment {
     private Observable<Feed> getCommentsObservable(final Feed post){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
         HashMap<String, String> body = new HashMap<String, String>();
 
         return NewsFeedApi.getRequestApi()
@@ -312,7 +323,7 @@ public class NewsFeedFragment extends Fragment {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -323,7 +334,7 @@ public class NewsFeedFragment extends Fragment {
     private Observable<Feed> getLikedObservable(final Feed post){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
         HashMap<String, String> body = new HashMap<String, String>();
 
         return NewsFeedApi.getRequestApi()
@@ -355,7 +366,7 @@ public class NewsFeedFragment extends Fragment {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -366,7 +377,7 @@ public class NewsFeedFragment extends Fragment {
     public Observable<Feed> getProfilePicObservable(final Feed post){
 
         HashMap<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Bearer "+sharedpreferences.getString("accessToken", null));
+        headerMap.put("Authorization", "Bearer "+token);
         HashMap<String, String> body = new HashMap<String, String>();
 
         return CommentsApi.getRequestApi()

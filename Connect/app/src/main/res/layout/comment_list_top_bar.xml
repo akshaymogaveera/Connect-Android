@@ -6,9 +6,10 @@
         android:background="@drawable/white_grey_border_bottom">
 
         <androidx.appcompat.widget.Toolbar
+            app:menu="@menu/card_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/profileToolBar">
+            android:id="@+id/commentToolBar">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -42,6 +43,7 @@
 
 
         </androidx.appcompat.widget.Toolbar>
+
 
 
 

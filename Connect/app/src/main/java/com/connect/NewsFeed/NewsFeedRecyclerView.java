@@ -29,8 +29,14 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
+import org.ocpsoft.prettytime.PrettyTime;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import static com.connect.Post.CreatePostApiCall.deletePost;
 
@@ -74,14 +80,30 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
         Card card = list.get(position);
 
         try{
-
             lastPosition = position;
-
-
             holder.title.setText(card.getTitle());
             holder.commentCount.setText(card.getCountComments());
             holder.likesCount.setText(card.getCountLikes());
             holder.caption.setText(card.getCaption());
+
+            String[] datelist = card.getCreatedDate().split("\\.");
+            String[] datelist1 = card.getCreatedDate().split("\\+");
+            String date ="date";
+            if(datelist.length > 1) {
+                //System.out.println(datelist.length+"Count -----------"+datelist[0]);
+                date = datelist[0] + "Z";
+            }
+            else if(datelist1.length > 1){
+                date = datelist1[0] + "Z";
+            }
+            else {
+                date = card.getCreatedDate();
+            }
+            Date parsedDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(date);
+            PrettyTime prettyTime = new PrettyTime(Locale.getDefault());
+            String ago = prettyTime.format(parsedDate);
+            holder.timeAgo.setText(ago);
+            //Log.d(TAG, " Date --------------------------  "+ago);
 
 //            if(Integer.valueOf(card.getCountComments()) > 0){
 //                Log.d(TAG," view all comments: "+card.getCountComments());
@@ -176,12 +198,15 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
                 @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
                 public void onClick(View v) {
-                    Log.d(TAG, "View All likes button clicked");
-                    Intent intent = new Intent(mContext, LikesListActivity.class);
-                    intent.putExtra("post_id",card.getId());
-                    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
-                    //startActivity(intent);
-                    mContext.startActivity(intent);
+
+                    if(Integer.parseInt(card.getCountLikes()) > 0){
+                        Log.d(TAG, "View All likes button clicked");
+                        Intent intent = new Intent(mContext, LikesListActivity.class);
+                        intent.putExtra("post_id",card.getId());
+                        //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
+                        //startActivity(intent);
+                        mContext.startActivity(intent);
+                    }
 
                 }
             });
@@ -190,12 +215,15 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
                 @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
                 public void onClick(View v) {
+
                     Log.d(TAG, "View All comments button clicked");
                     Intent intent = new Intent(mContext, ViewAllCommentsActivity.class);
-                    intent.putExtra("post_id",card.getId());
+                    intent.putExtra("post_id", card.getId());
+                    intent.putExtra("authorId", card.getAuthorid());
                     //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
                     //startActivity(intent);
                     mContext.startActivity(intent);
+
 
                 }
             });
@@ -295,7 +323,7 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
 
             );
 
-        }catch (IllegalArgumentException e){
+        }catch (IllegalArgumentException | ParseException e){
             System.out.println(e);
             Log.e(TAG, "getView: IllegalArgumentException: " + e.getMessage() );
         }
@@ -310,7 +338,7 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
 
     class NewsFeedViewHolder extends RecyclerView.ViewHolder{
 
-        TextView title, likesCount, commentCount, cardLikes, caption, cardTitle;
+        TextView title, likesCount, commentCount, cardLikes, caption, cardTitle, timeAgo;
         ImageView image, likeImage, profile_photo_newsfeed, commentImage;
         ProgressBar dialog;
         MenuItem deleteOption;
@@ -331,8 +359,10 @@ public class NewsFeedRecyclerView extends RecyclerView.Adapter<NewsFeedRecyclerV
             commentImage = (ImageView) itemView.findViewById(R.id.commentImage);
             cardLikes =  (TextView) itemView.findViewById(R.id.cardLikes);
             caption = (TextView)  itemView.findViewById(R.id.caption);
+            timeAgo = (TextView)  itemView.findViewById(R.id.timeAgo);
             deleteOption = itemView.findViewById(R.id.delete);
             toolbar = itemView.findViewById(R.id.linearabove);
+
 
 
         }

@@ -76,6 +76,7 @@ public class ProfileActivity extends AppCompatActivity {
     int page=1;
     HashSet<Integer> pageSet = new HashSet<>();
     LinearLayoutManager linearLayoutManager;
+    TextView emptyView;
 
 
     @Override
@@ -91,8 +92,9 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
-
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
+        emptyView = (TextView) findViewById(R.id.empty_view);
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
         countPosts = findViewById(R.id.countPosts);
         countFriends = findViewById(R.id.countFollowers);
@@ -409,7 +411,7 @@ public class ProfileActivity extends AppCompatActivity {
                         for (Feed post: posts) {
                             System.out.println(post.getAuthor().getUsername());
                             //data.put(f.getAuthor().getUsername(),"http://192.168.42.179:8000"+f.getPost_pics());
-                            Card temp = new Card(post.getAuthor().getId(), post.getId(), BASE_URL+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect);
+                            Card temp = new Card(post.getAuthor().getId(), post.getId(), BASE_URL+post.getPost_pics(),post.getAuthor().getUsername(), countLikes, countComments, liked, post.getText(), "drawable://" + R.drawable.connect, post.getCreated_date());
                             mapping.put(post.getId(),temp);
                             list.add(temp);
                         }
@@ -423,6 +425,11 @@ public class ProfileActivity extends AppCompatActivity {
                         }
                         else{
                             adapter.notifyDataSetChanged();
+                        }
+
+                        if(list.size() == 0){
+                            mListView.setVisibility(View.GONE);
+                            emptyView.setVisibility(View.VISIBLE);
                         }
 
                         //adapter.setPosts(posts);
@@ -465,7 +472,7 @@ public class ProfileActivity extends AppCompatActivity {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -504,7 +511,7 @@ public class ProfileActivity extends AppCompatActivity {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }
@@ -547,7 +554,7 @@ public class ProfileActivity extends AppCompatActivity {
                         list.set(pos,temp);
 
                         //adapter.notifyDataSetChanged();
-                        adapter.notifyItemChanged(pos);
+                        //adapter.notifyItemChanged(pos);
 
                         return post;
                     }

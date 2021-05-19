@@ -7,12 +7,14 @@
     android:layout_height="wrap_content">
 
     <LinearLayout
-        android:background="@drawable/white_grey_border_top"
+        android:clickable="true"
+        android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="90dp"
         android:layout_marginStart="3dp"
         android:layout_marginLeft="3dp"
         android:layout_marginTop="3dp"
+        android:background="@drawable/white_grey_border_top"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -48,5 +50,16 @@
 
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/timeAgo"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="6dp"
+        android:text="8 hours ago"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"></TextView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

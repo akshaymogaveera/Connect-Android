@@ -2,7 +2,7 @@
     <string name="app_name">Connect</string>
     <string name="username">username</string>
     <string name="ip1">192.168.42.63</string>
-    <string name="ip">192.168.42.80</string>
+    <string name="ip">amogaveera20.pythonanywhere.com</string>
     <string name="LOGIN_URL">http://192.168.42.206:8000/firstapp/basic/</string>
     <string name="action_settings">Settings</string>
     <string name="country_prompt">Choose a country</string>

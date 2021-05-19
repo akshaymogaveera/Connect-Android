@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,7 +67,8 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        //BASE_URL = "http://"+ getResources().getString(R.string.ip)+":8000";
+        BASE_URL = "https://"+ getResources().getString(R.string.ip);
         sharedpreferences = getSharedPreferences("myKey", MODE_PRIVATE);
 
         s1 = findViewById(R.id.spinner_country);
@@ -84,6 +86,14 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
         password = findViewById(R.id.password_1);
         confirmPassword = findViewById(R.id.password_2);
 
+        ImageView backArrow = (ImageView) findViewById(R.id.backArrow);
+        backArrow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: navigating back to Home Activity");
+                finish();
+            }
+        });
         register = findViewById(R.id.submitRegister);
         register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +106,7 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
                 else if (!(mLastName.getText().length() > 0)) {
                     Toast.makeText(mContext, "Please fill your Last Name", Toast.LENGTH_SHORT).show();
                 }
-                else if (!(mUsername.getText().length() > 0)) {
+                else if (!(mUsername.getText().length() > 4)) {
                     Toast.makeText(mContext, "Please fill your User Name", Toast.LENGTH_SHORT).show();
                 }
                 else if (!(String.valueOf(s2.getSelectedItem()).length() > 0)) {
@@ -224,7 +234,27 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
                             JSONObject errorResponse = new JSONObject(response.errorBody().string());
                             JSONObject error = errorResponse.getJSONObject("error");
 
-                            if (error.has("email")){
+                            if (error.has("username")){
+                                JSONArray emailArray = new JSONArray(error.get("username").toString());
+                                items.add(emailArray.getString(0));
+                            }
+                            else if (error.has("password")){
+                                JSONArray emailArray = new JSONArray(error.get("password").toString());
+                                items.add(emailArray.getString(1));
+                            }
+                            else if (error.has("first_name")){
+                                JSONArray emailArray = new JSONArray(error.get("first_name").toString());
+                                items.add(emailArray.getString(1));
+//                                UniversalImageLoader.setImage(BASE_URL+imgUrlOld, mProfilePhoto, null, "");
+//                                imgUrl = imgUrlOld;
+                            }
+                            else if (error.has("last_name")){
+                                JSONArray emailArray = new JSONArray(error.get("last_name").toString());
+                                items.add(emailArray.getString(1));
+//                                UniversalImageLoader.setImage(BASE_URL+imgUrlOld, mProfilePhoto, null, "");
+//                                imgUrl = imgUrlOld;
+                            }
+                            else if (error.has("email")){
                                 JSONArray emailArray = new JSONArray(error.get("email").toString());
                                 items.add(emailArray.getString(0));
 //                                UniversalImageLoader.setImage(BASE_URL+imgUrlOld, mProfilePhoto, null, "");
@@ -239,6 +269,9 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
                             else if (error.has("city")){
                                 JSONArray emailArray = new JSONArray(error.get("city").toString());
                                 items.add(emailArray.getString(0));
+                            }
+                            else{
+                                items.add("Some error occured!, Please try later.");
                             }
 
                             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);

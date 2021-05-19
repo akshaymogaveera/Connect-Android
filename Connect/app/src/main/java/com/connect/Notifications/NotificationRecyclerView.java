@@ -25,8 +25,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
+import org.ocpsoft.prettytime.PrettyTime;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -38,15 +41,17 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
 
     private Context mContext;
     private int mResource;
+    private String userId;
     private ArrayList<NotificationsLinear> list;
     private HashMap<String, NotificationsLinear> mapping;
     private int lastPosition = -1;
 
-    public NotificationRecyclerView(Context mContext, int resource, ArrayList<NotificationsLinear> list, HashMap<String, NotificationsLinear> mapping) {
+    public NotificationRecyclerView(Context mContext, int resource, ArrayList<NotificationsLinear> list, HashMap<String, NotificationsLinear> mapping, String userId) {
         this.mContext = mContext;
         this.mResource = resource;
         this.list = list;
         this.mapping = mapping;
+        this.userId = userId;
 
         com.connect.Utils.ImageLoader imageLoader = new com.connect.Utils.ImageLoader();
         imageLoader.setupImageLoader(mContext);
@@ -70,6 +75,11 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
         NotificationsLinear card = list.get(position);
 
         try{
+
+
+            PrettyTime prettyTime = new PrettyTime(Locale.getDefault());
+            String ago = prettyTime.format(card.getDate());
+            holder.timeAgo.setText(ago);
 
             lastPosition = position;
 
@@ -99,9 +109,10 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
                     }
                     else if(card.getText().contains("comment")){
 
-                        Log.d(TAG, "onClick: profile clicked");
+                        Log.d(TAG, "onClick: comment clicked");
                         Intent intent = new Intent(mContext, ViewAllCommentsActivity.class);
                         intent.putExtra("post_id",card.getPostId().replace("c",""));
+                        intent.putExtra("authorId", userId);
                         //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); //268435456
                         //startActivity(intent);
                         mContext.startActivity(intent);
@@ -187,7 +198,7 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
 
     class NotificationViewHolder extends RecyclerView.ViewHolder{
 
-        TextView notificationtext;
+        TextView notificationtext, timeAgo;
         CircleImageView profile_photo_notification;
         ImageView post_pic_notification;
         ProgressBar dialog;
@@ -195,6 +206,7 @@ class NotificationRecyclerView extends RecyclerView.Adapter<NotificationRecycler
         public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
 
+            timeAgo =  itemView.findViewById(R.id.timeAgo);
             notificationtext =  itemView.findViewById(R.id.notificationtext);
             profile_photo_notification = (CircleImageView) itemView.findViewById(R.id.profile_photo_notification);
             post_pic_notification =  itemView.findViewById(R.id.post_pic_notification);

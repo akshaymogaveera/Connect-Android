@@ -1,16 +1,14 @@
 package com.connect.main;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ProgressBar;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.connect.Auth.AuthAPI;
-import com.connect.Auth.BasicAuthInterceptor;
 import com.connect.Auth.LoginActivity;
 import com.connect.Home.HomeActivity;
 
@@ -90,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
 
             Retrofit retrofit = new Retrofit.Builder()
                     //.client(httpClient)
-                    .baseUrl("http://"+getResources().getString(R.string.ip)+":8000/firstapp/")
+                    //.baseUrl("http://"+getResources().getString(R.string.ip)+":8000/firstapp/")
+                    .baseUrl("https://"+getResources().getString(R.string.ip)+"/firstapp/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 
