@@ -10,3 +10,8 @@
     6) See the posts shared by your friends on the feed and also get notifications for all the interactions happening on your posts.
     8) To use app you need to first setup the Django backend and connect with the Android app.
   
+### Working
+    1) Android App uses REST API's for all it's task.
+    2) User is authenticated via JWT token which is stored locally. If the token is expired, the user is asked to login.
+    
+## Navigate to Django Backend <a href="https://github.com/akshay1997feb/Connect">repo</a>
