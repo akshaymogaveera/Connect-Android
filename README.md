@@ -14,4 +14,4 @@
     1) Android App uses REST API's for all it's task.
     2) User is authenticated via JWT token which is stored locally. If the token is expired, the user is asked to login.
     
-## Navigate to Django Backend <a href="https://github.com/akshay1997feb/Connect">repo</a>
+## Navigate to Django Backend <a href="https://github.com/akshay1997feb/Connect-Django">repo</a>
