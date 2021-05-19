@@ -1,5 +1,6 @@
 # Connect
 ### Android
+## Watch the <a href="https://photos.app.goo.gl/rQqGsjjTXUZ39oeK8">demo</a> of the Connect app.
 ### Overview
     1) Connect is a simple social networking application with no ads and is completely secure.
     2) Users can register and get started in few minutes. 
