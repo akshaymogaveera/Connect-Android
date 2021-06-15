@@ -2,7 +2,7 @@
 ### Android
 ## Watch the <a href="https://photos.app.goo.gl/rQqGsjjTXUZ39oeK8">demo</a> of the Connect application!
 ### Overview
-   1) Connect is a simple social networking application with no ads and is completely secure.
+   1) Connect is a simple social networking application which is completely secure.
    2) Users can register and get started in few minutes. 
    3) Simple way to share your amazing photographs with all your friends. 
    4) Your friends can interact with the posts by liking or commenting on it.
