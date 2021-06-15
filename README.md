@@ -1,6 +1,6 @@
 # Connect
 ### Android
-## Watch the demo of the Connect application!
+## Watch the demo of the Connect application! (Click on the image below)
 
 <a href="https://youtu.be/ljr4xq2ozOs" target="_blank"><img src="https://github.com/akshay1997feb/Connect-Android/blob/master/connect.jpeg"></a>
 
