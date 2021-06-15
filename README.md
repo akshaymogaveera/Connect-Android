@@ -2,7 +2,7 @@
 ### Android
 ## Watch the demo of the Connect application!
 
-<a href="https://youtu.be/ljr4xq2ozOs" target="_blank">![alt text](https://github.com/akshay1997feb/Self-Driving-Robot-Using-Neural-Network/blob/master/pic.png)"</a>
+<a href="https://youtu.be/ljr4xq2ozOs" target="_blank">![alt text](https://github.com/akshay1997feb/Connect-Android/blob/master/connect.jpeg)"</a>
 
 ### Overview
    1) Connect is a simple social networking application which is completely secure.
