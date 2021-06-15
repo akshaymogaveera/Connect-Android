@@ -2,7 +2,7 @@
 ### Android
 ## Watch the demo of the Connect application! (Click on the image below)
 
-<a href="https://youtu.be/ljr4xq2ozOs" target="_blank"><img src="https://github.com/akshay1997feb/Connect-Android/blob/master/connect.jpeg"></a>
+<a href="https://youtu.be/ljr4xq2ozOs" target="_blank"><img src="https://github.com/akshay1997feb/Connect-Android/blob/master/connect.jpeg" width="100"></a>
 
 ### Overview
    1) Connect is a simple social networking application which is completely secure.
